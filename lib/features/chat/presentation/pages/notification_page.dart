@@ -59,7 +59,7 @@ class NotificationPage extends StatelessWidget {
               Expanded(
                 child: ListView(
                   physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
                   children: [
                     _buildSectionTitle('Mới'),
                     _buildNotificationItem(

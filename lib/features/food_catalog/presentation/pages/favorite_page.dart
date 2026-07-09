@@ -216,7 +216,7 @@ class _FavoritePageState extends State<FavoritePage> {
                     )
                   : ListView.builder(
                       physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
                       itemCount: filteredItems.length,
                       itemBuilder: (context, index) {
                         final item = filteredItems[index];

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:food_app/core/constants/app_colors.dart';
 import 'package:food_app/features/profile/presentation/pages/profile_page.dart';
@@ -30,41 +31,139 @@ class _TaskBarWidgetState extends State<TaskBarWidget> {
       const ProfilePage(),
     ];
 
+    final double bottomPadding = MediaQuery.of(context).padding.bottom;
+
     return Scaffold(
+      extendBody: true, // Content scrolls under the glass bar
       body: pages[_selectedIndex],
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (int index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        backgroundColor: Color(0xFFEB9C6C),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home, color: AppColors.primaryRed),
-            label: "Trang chủ",
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.favorite_border_outlined),
-            selectedIcon: Icon(Icons.favorite, color: AppColors.primaryRed),
-            label: "Yêu thích",
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.notifications_none_outlined),
-            selectedIcon: Icon(
-              Icons.notifications,
-              color: AppColors.primaryRed,
+      bottomNavigationBar: Container(
+        height: 70 + bottomPadding,
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 16,
+              offset: const Offset(0, -4),
             ),
-            label: "Thông báo",
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
           ),
-          NavigationDestination(
-            icon: Icon(Icons.person_2_outlined),
-            selectedIcon: Icon(Icons.person, color: AppColors.primaryRed),
-            label: "Tôi",
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                bottom: bottomPadding,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.90),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+                border: Border(
+                  top: BorderSide(
+                    color: Colors.white.withValues(alpha: 0.6),
+                    width: 1.5,
+                  ),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildNavItem(
+                    0,
+                    Icons.home_rounded,
+                    Icons.home_outlined,
+                    "Trang chủ",
+                  ),
+                  _buildNavItem(
+                    1,
+                    Icons.favorite_rounded,
+                    Icons.favorite_border_rounded,
+                    "Yêu thích",
+                  ),
+                  _buildNavItem(
+                    2,
+                    Icons.notifications_rounded,
+                    Icons.notifications_none_rounded,
+                    "Thông báo",
+                  ),
+                  _buildNavItem(
+                    3,
+                    Icons.person_rounded,
+                    Icons.person_outline_rounded,
+                    "Tôi",
+                  ),
+                ],
+              ),
+            ),
           ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(
+    int index,
+    IconData selectedIcon,
+    IconData unselectedIcon,
+    String label,
+  ) {
+    final isSelected = _selectedIndex == index;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedIndex = index;
+        });
+      },
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOutCubic,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primaryRed.withValues(alpha: 0.12)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isSelected ? selectedIcon : unselectedIcon,
+              color: isSelected ? AppColors.primaryRed : Colors.grey[600],
+              size: 24,
+            ),
+            AnimatedCrossFade(
+              duration: const Duration(milliseconds: 250),
+              firstChild: Row(
+                children: [
+                  const SizedBox(width: 8),
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      color: AppColors.primaryRed,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13.5,
+                    ),
+                  ),
+                ],
+              ),
+              secondChild: const SizedBox.shrink(),
+              crossFadeState: isSelected
+                  ? CrossFadeState.showFirst
+                  : CrossFadeState.showSecond,
+            ),
+          ],
+        ),
       ),
     );
   }

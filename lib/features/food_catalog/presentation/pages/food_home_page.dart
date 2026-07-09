@@ -259,8 +259,11 @@ class _FoodHomePageState extends State<FoodHomePage> {
       _selectedCategory = categoryName;
     });
 
-    if ((categoryName == 'Hải sản' || categoryName == 'Thịt bò' || categoryName == 'Tất cả') &&
-        (_mealsByCategory['Hải sản'] == null || _mealsByCategory['Thịt bò'] == null) &&
+    if ((categoryName == 'Hải sản' ||
+            categoryName == 'Thịt bò' ||
+            categoryName == 'Tất cả') &&
+        (_mealsByCategory['Hải sản'] == null ||
+            _mealsByCategory['Thịt bò'] == null) &&
         !_isLoading) {
       _loadAllApiData();
     }
@@ -381,7 +384,8 @@ class _FoodHomePageState extends State<FoodHomePage> {
                             backgroundColor: cat['bg'] as Color,
                             textColor: cat['text'] as Color,
                             isSelected: isSel,
-                            onTap: () => _onCategoryTapped(cat['title'] as String),
+                            onTap: () =>
+                                _onCategoryTapped(cat['title'] as String),
                           ),
                         );
                       }).toList(),
@@ -433,34 +437,34 @@ class _FoodHomePageState extends State<FoodHomePage> {
                           ),
                         )
                       : _hasError || hotMeals.isEmpty
-                          ? const SizedBox(
-                              height: 100,
-                              child: Center(
-                                child: Text(
-                                  'Không có món ăn phổ biến.',
-                                  style: TextStyle(color: Colors.grey),
-                                ),
-                              ),
-                            )
-                          : SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              physics: const BouncingScrollPhysics(),
-                              child: Row(
-                                children: hotMeals.map((meal) {
-                                  return Padding(
-                                    padding: const EdgeInsets.only(right: 20),
-                                    child: FoodCardWidget(
-                                      title: meal.name,
-                                      image: meal.image,
-                                      price: meal.price,
-                                      rating: meal.rating,
-                                      isHot: meal.isHot,
-                                      soldCount: meal.soldCount,
-                                    ),
-                                  );
-                                }).toList(),
-                              ),
+                      ? const SizedBox(
+                          height: 100,
+                          child: Center(
+                            child: Text(
+                              'Không có món ăn phổ biến.',
+                              style: TextStyle(color: Colors.grey),
                             ),
+                          ),
+                        )
+                      : SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          child: Row(
+                            children: hotMeals.map((meal) {
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 20),
+                                child: FoodCardWidget(
+                                  title: meal.name,
+                                  image: meal.image,
+                                  price: meal.price,
+                                  rating: meal.rating,
+                                  isHot: meal.isHot,
+                                  soldCount: meal.soldCount,
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
                   const SizedBox(height: 30),
                   Text(
                     _selectedCategory,
@@ -481,30 +485,31 @@ class _FoodHomePageState extends State<FoodHomePage> {
                           ),
                         )
                       : _hasError
-                          ? SizedBox(
-                              height: 100,
-                              child: Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Text(
-                                      'Không thể tải danh sách món ăn.',
-                                      style: TextStyle(color: Colors.grey),
-                                    ),
-                                    TextButton(
-                                      onPressed: _loadAllApiData,
-                                      child: const Text(
-                                        'Thử lại',
-                                        style: TextStyle(
-                                          color: AppColors.primaryRed,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                      ? SizedBox(
+                          height: 100,
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text(
+                                  'Không thể tải danh sách món ăn.',
+                                  style: TextStyle(color: Colors.grey),
                                 ),
-                              ),
-                            )
-                          : _buildCategoryMealsGrid(),
+                                TextButton(
+                                  onPressed: _loadAllApiData,
+                                  child: const Text(
+                                    'Thử lại',
+                                    style: TextStyle(
+                                      color: AppColors.primaryRed,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : _buildCategoryMealsGrid(),
+                  const SizedBox(height: 100),
                 ],
               ),
             ),
@@ -522,6 +527,13 @@ class _FoodHomePageState extends State<FoodHomePage> {
           final list = _mealsByCategory[catName] ?? [];
           if (list.isEmpty) return const SizedBox.shrink();
 
+          // Limit each row to at most 5 items by chunking
+          List<List<MealData>> chunkedMeals = [];
+          for (var i = 0; i < list.length; i += 5) {
+            final end = (i + 5 < list.length) ? i + 5 : list.length;
+            chunkedMeals.add(list.sublist(i, end));
+          }
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -536,26 +548,34 @@ class _FoodHomePageState extends State<FoodHomePage> {
                   ),
                 ),
               ),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                child: Row(
-                  children: list.map((meal) {
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 20),
-                      child: FoodCardWidget(
-                        title: meal.name,
-                        image: meal.image,
-                        price: meal.price,
-                        rating: meal.rating,
-                        isHot: meal.isHot,
-                        soldCount: meal.soldCount,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: chunkedMeals.map((chunk) {
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      child: Row(
+                        children: chunk.map((meal) {
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 20),
+                            child: FoodCardWidget(
+                              title: meal.name,
+                              image: meal.image,
+                              price: meal.price,
+                              rating: meal.rating,
+                              isHot: meal.isHot,
+                              soldCount: meal.soldCount,
+                            ),
+                          );
+                        }).toList(),
                       ),
-                    );
-                  }).toList(),
-                ),
+                    ),
+                  );
+                }).toList(),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
             ],
           );
         }).toList(),
