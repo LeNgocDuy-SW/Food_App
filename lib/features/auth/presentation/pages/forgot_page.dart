@@ -3,6 +3,7 @@ import 'package:food_app/features/auth/presentation/widgets/login_with.dart';
 import '../../../../core/widget.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/summer_animated_background.dart';
 import '../widgets/sign_up_textfield.dart';
 import '../widgets/login_button.dart';
 import 'login_page.dart';
@@ -14,8 +15,7 @@ class ForgotPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BackgroundContainer(
-        opacity: 0.1,
+      body: SummerAnimatedBackground(
         child: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {

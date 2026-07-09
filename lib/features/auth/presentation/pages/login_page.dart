@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/widget.dart';
+import '../../../../core/summer_animated_background.dart';
 import '../widgets/login_textfield.dart';
 import '../widgets/login_button.dart';
 import '../widgets/login_with.dart';
@@ -15,8 +16,7 @@ class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BackgroundContainer(
-        opacity: 0.1,
+      body: SummerAnimatedBackground(
         child: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {

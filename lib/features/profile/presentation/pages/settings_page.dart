@@ -16,7 +16,10 @@ class SettingsPage extends StatelessWidget {
             children: [
               // Custom AppBar
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
                 child: Row(
                   children: [
                     GestureDetector(
@@ -48,7 +51,9 @@ class SettingsPage extends StatelessWidget {
                     children: [
                       Container(
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF5EFEB), // Pinkish white base color
+                          color: const Color(
+                            0xFFF5EFEB,
+                          ), // Pinkish white base color
                           borderRadius: BorderRadius.circular(25),
                           boxShadow: [
                             BoxShadow(
@@ -75,7 +80,10 @@ class SettingsPage extends StatelessWidget {
                               context,
                               'Tài khoản & Bảo mật',
                               onTap: () {
-                                Navigator.push(context, createRoute(const EditProfilePage()));
+                                Navigator.push(
+                                  context,
+                                  createRoute(const EditProfilePage()),
+                                );
                               },
                             ),
                             _buildSettingsItem(context, 'Địa chỉ'),
@@ -84,8 +92,15 @@ class SettingsPage extends StatelessWidget {
                             _buildSettingsItem(context, 'Ngôn ngữ'),
                             _buildSettingsItem(context, 'Điều khoản'),
                             _buildSettingsItem(context, 'Giới thiệu'),
-                            _buildSettingsItem(context, 'Tài khoản/Thẻ ngân hàng'),
-                            _buildSettingsItem(context, 'Yêu cầu xóa tài khoản', showDivider: false),
+                            _buildSettingsItem(
+                              context,
+                              'Tài khoản/Thẻ ngân hàng',
+                            ),
+                            _buildSettingsItem(
+                              context,
+                              'Yêu cầu xóa tài khoản',
+                              showDivider: false,
+                            ),
                           ],
                         ),
                       ),
@@ -104,7 +119,10 @@ class SettingsPage extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: const Color(0xFFF5EFEB),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.black12, width: 0.5),
+                            border: Border.all(
+                              color: Colors.black12,
+                              width: 0.5,
+                            ),
                           ),
                           child: const Center(
                             child: Text(
@@ -156,11 +174,7 @@ class SettingsPage extends StatelessWidget {
           onTap: onTap ?? () {},
         ),
         if (showDivider)
-          const Divider(
-            height: 1,
-            thickness: 0.5,
-            color: Colors.black12,
-          ),
+          const Divider(height: 1, thickness: 0.5, color: Colors.black12),
       ],
     );
   }

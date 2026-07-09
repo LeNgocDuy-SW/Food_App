@@ -6,6 +6,7 @@ import 'package:food_app/features/food_catalog/presentation/widgets/catalog_widg
 import '../widgets/search_bar_widget.dart';
 import '../widgets/food_card_widget.dart';
 import 'package:food_app/core/services/api_service.dart';
+import 'package:food_app/features/food_catalog/presentation/widgets/summer_drawer_widget.dart';
 
 class MealData {
   final String id;
@@ -189,6 +190,11 @@ class _FoodHomePageState extends State<FoodHomePage> {
       _mealsByCategory[category] = _sortHotItemsFirst(list);
     });
     _loadAllApiData();
+
+    // Tự động hiển thị Banner quảng cáo mùa hè khi mở app
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showSummerAdBanner(context);
+    });
   }
 
   Future<void> _loadAllApiData() async {
@@ -347,6 +353,7 @@ class _FoodHomePageState extends State<FoodHomePage> {
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
+      drawer: const SummerDrawerWidget(),
       body: BackgroundContainer(
         opacity: 0.5,
         child: SafeArea(
@@ -615,6 +622,195 @@ class _FoodHomePageState extends State<FoodHomePage> {
           ),
         );
       }).toList(),
+    );
+  }
+
+  void _showSummerAdBanner(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              // Khung Banner quảng cáo
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(32),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFFFF7043), // Cam san hô rực rỡ
+                      Color(0xFFFFD54F), // Vàng nắng
+                    ],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.15),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 20),
+                    // Biểu tượng phong cách mùa hè
+                    const Text('🍉 🌴 🍹', style: TextStyle(fontSize: 44)),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'RỰC RỠ SẮC HÈ!',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: 1.0,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black26,
+                            blurRadius: 8,
+                            offset: Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Nhận ngay ưu đãi giải nhiệt ngày hè cực khủng',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    // Khung chứa Mã giảm giá vé xé răng cưa mô phỏng thực tế
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                      child: Column(
+                        children: const [
+                          Text(
+                            'NHẬP MÃ GIẢM GIÁ 50%',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          SizedBox(height: 6),
+                          Text(
+                            'GIAMGIA50',
+                            style: TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.primaryRed,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // Nút Nhận mã
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryRed,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        elevation: 0,
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).clearSnackBars();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Đã nhận mã giảm giá GIAMGIA50!'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        'Nhận mã ngay',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Nút biểu tượng Mặt trời trang trí nổi ở trên
+              Positioned(
+                top: -40,
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 10,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: const Text('☀️', style: TextStyle(fontSize: 40)),
+                ),
+              ),
+              // Nút ẩn (X) ở góc trên phải
+              Positioned(
+                top: -12,
+                right: -12,
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 8,
+                          offset: Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.close_rounded,
+                      color: Colors.black87,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../widgets/welcom_button.dart';
+import '../../../../core/summer_animated_background.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
@@ -9,15 +10,7 @@ class WelcomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/image/background.png'),
-            fit: BoxFit.cover,
-          ),
-        ),
+      body: SummerAnimatedBackground(
         child: SafeArea(
           child: Container(
             padding: EdgeInsets.all(56.0),

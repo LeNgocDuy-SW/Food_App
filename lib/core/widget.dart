@@ -14,17 +14,53 @@ class BackgroundContainer extends StatelessWidget {
     return Container(
       width: double.infinity,
       height: double.infinity,
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: const AssetImage('assets/image/background.png'),
-          fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(
-            Colors.black.withValues(alpha: 1.0 - opacity),
-            BlendMode.dstATop,
-          ),
-        ),
+      decoration: const BoxDecoration(
+        color: Color(
+          0xFFFAFAFA,
+        ), // Nền trắng ngà mang lại cảm giác sạch sẽ, cao cấp
       ),
-      child: child,
+      child: Stack(
+        children: [
+          // Vệt sáng mờ màu cam (Primary) ở góc trên phải
+          Positioned(
+            top: -150,
+            right: -100,
+            child: Container(
+              width: 400,
+              height: 400,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFFFF5722).withOpacity(0.07),
+                    const Color(0xFFFF5722).withOpacity(0.0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // Vệt sáng mờ màu đỏ ở góc dưới trái
+          Positioned(
+            bottom: -100,
+            left: -150,
+            child: Container(
+              width: 350,
+              height: 350,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFFF22323).withOpacity(0.05),
+                    const Color(0xFFF22323).withOpacity(0.0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // Nội dung chính
+          Positioned.fill(child: child),
+        ],
+      ),
     );
   }
 }

@@ -14,8 +14,27 @@ class SearchBarWidget extends StatelessWidget {
       width: double.infinity,
       child: Row(
         children: [
-          const Icon(Icons.menu, color: AppColors.primaryRed, size: 28),
-          const SizedBox(width: 16),
+          GestureDetector(
+            onTap: () {
+              Scaffold.of(context).openDrawer();
+            },
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 5,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.menu_rounded, color: AppColors.primaryRed, size: 28),
+            ),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Container(
               height: 40,

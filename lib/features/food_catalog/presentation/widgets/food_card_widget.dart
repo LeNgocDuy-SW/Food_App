@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:food_app/core/constants/app_colors.dart';
+import '../../data/favorite_manager.dart';
 import '../pages/food_detail_page.dart';
 
-class FoodCardWidget extends StatelessWidget {
+class FoodCardWidget extends StatefulWidget {
   final String title;
   final String image;
   final String price;
@@ -23,17 +24,24 @@ class FoodCardWidget extends StatelessWidget {
   });
 
   @override
+  State<FoodCardWidget> createState() => _FoodCardWidgetState();
+}
+
+class _FoodCardWidgetState extends State<FoodCardWidget> {
+  bool _isFavorite = false;
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap ??
+      onTap: widget.onTap ??
           () => Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => FoodDetailPage(
-                    title: title,
-                    image: image,
-                    price: price,
-                    rating: rating,
+                    title: widget.title,
+                    image: widget.image,
+                    price: widget.price,
+                    rating: widget.rating,
                   ),
                 ),
               ),
@@ -44,7 +52,7 @@ class FoodCardWidget extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
+              color: Colors.black.withOpacity(0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -60,9 +68,9 @@ class FoodCardWidget extends StatelessWidget {
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(20),
                   ),
-                  child: image.startsWith('http')
+                  child: widget.image.startsWith('http')
                       ? Image.network(
-                          image,
+                          widget.image,
                           height: 135,
                           width: double.infinity,
                           fit: BoxFit.cover,
@@ -72,15 +80,15 @@ class FoodCardWidget extends StatelessWidget {
                               height: 135,
                               color: Colors.grey.shade100,
                               child: const Center(
-                                child: SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.0,
-                                    color: AppColors.primaryRed,
+                                  child: SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.0,
+                                      color: AppColors.primaryRed,
+                                    ),
                                   ),
                                 ),
-                              ),
                             );
                           },
                           errorBuilder: (context, error, stackTrace) =>
@@ -97,14 +105,14 @@ class FoodCardWidget extends StatelessWidget {
                           ),
                         )
                       : Image.asset(
-                          image,
+                          widget.image,
                           height: 135,
                           width: double.infinity,
                           fit: BoxFit.cover,
                         ),
                 ),
                 // HOT Badge
-                if (isHot)
+                if (widget.isHot)
                   Positioned(
                     top: 8,
                     left: 8,
@@ -122,7 +130,7 @@ class FoodCardWidget extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.red.withValues(alpha: 0.3),
+                            color: Colors.red.withOpacity(0.3),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -145,6 +153,63 @@ class FoodCardWidget extends StatelessWidget {
                       ),
                     ),
                   ),
+                // Favorite Heart Button (Top Right)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: ValueListenableBuilder<List<FavoriteMeal>>(
+                    valueListenable: FavoriteManager.instance.favoritesNotifier,
+                    builder: (context, favorites, child) {
+                      final isFav = FavoriteManager.instance.isFavorite(widget.title);
+                      return GestureDetector(
+                        onTap: () {
+                          final category = widget.title.contains('Bánh Mì') || widget.title.contains('Bánh mỳ')
+                              ? 'Bánh mỳ'
+                              : 'Phở & Bún';
+                          FavoriteManager.instance.toggleFavorite(
+                            FavoriteMeal(
+                              title: widget.title,
+                              image: widget.image,
+                              price: widget.price,
+                              rating: widget.rating,
+                              category: category,
+                            ),
+                          );
+                          ScaffoldMessenger.of(context).clearSnackBars();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                !isFav
+                                    ? 'Đã thêm "${widget.title}" vào yêu thích.'
+                                    : 'Đã xóa "${widget.title}" khỏi yêu thích.',
+                              ),
+                              duration: const Duration(seconds: 1),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.9),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            isFav ? Icons.favorite : Icons.favorite_border,
+                            color: AppColors.primaryRed,
+                            size: 16,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ],
             ),
             // Info padding
@@ -154,7 +219,7 @@ class FoodCardWidget extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    widget.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -170,7 +235,7 @@ class FoodCardWidget extends StatelessWidget {
                       const Icon(Icons.star, color: Colors.amber, size: 13),
                       const SizedBox(width: 2),
                       Text(
-                        rating,
+                        widget.rating,
                         style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
@@ -188,7 +253,7 @@ class FoodCardWidget extends StatelessWidget {
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          soldCount ?? 'Đã bán 50+',
+                          widget.soldCount ?? 'Đã bán 50+',
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
@@ -206,7 +271,7 @@ class FoodCardWidget extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        price,
+                        widget.price,
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
@@ -236,3 +301,4 @@ class FoodCardWidget extends StatelessWidget {
     );
   }
 }
+

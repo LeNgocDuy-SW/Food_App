@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/widget.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../data/favorite_manager.dart';
 import '../../../../features/cart/data/cart_manager.dart';
 import '../../../../features/cart/domain/entities/cart_item.dart';
 import '../../../../features/cart/presentation/pages/cart_page.dart';
@@ -27,6 +28,7 @@ class FoodDetailPage extends StatefulWidget {
 
 class _FoodDetailPageState extends State<FoodDetailPage> {
   int _quantity = 1;
+  bool _isFavorite = false;
   final GlobalKey _cartKey = GlobalKey();
   final GlobalKey _imageKey = GlobalKey();
 
@@ -50,19 +52,21 @@ class _FoodDetailPageState extends State<FoodDetailPage> {
   }
 
   void _runAddToCartAnimation() {
-    final RenderBox? imageBox = _imageKey.currentContext?.findRenderObject() as RenderBox?;
-    final RenderBox? cartBox = _cartKey.currentContext?.findRenderObject() as RenderBox?;
-    
+    final RenderBox? imageBox =
+        _imageKey.currentContext?.findRenderObject() as RenderBox?;
+    final RenderBox? cartBox =
+        _cartKey.currentContext?.findRenderObject() as RenderBox?;
+
     if (imageBox == null || cartBox == null) {
       _addToCartDirectly();
       return;
     }
-    
+
     final Offset imageOffset = imageBox.localToGlobal(Offset.zero);
     final Offset cartOffset = cartBox.localToGlobal(Offset.zero);
     final Size imageSize = imageBox.size;
     final Size cartSize = cartBox.size;
-    
+
     // Center of the food image card
     final startOffset = Offset(
       imageOffset.dx + imageSize.width / 2 - 25,
@@ -73,7 +77,7 @@ class _FoodDetailPageState extends State<FoodDetailPage> {
       cartOffset.dx + cartSize.width / 2 - 18,
       cartOffset.dy + cartSize.height / 2 - 18,
     );
-    
+
     late OverlayEntry overlayEntry;
     overlayEntry = OverlayEntry(
       builder: (context) => FlyingFoodWidget(
@@ -86,7 +90,7 @@ class _FoodDetailPageState extends State<FoodDetailPage> {
         },
       ),
     );
-    
+
     Overlay.of(context).insert(overlayEntry);
   }
 
@@ -104,55 +108,125 @@ class _FoodDetailPageState extends State<FoodDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F5F0),
+      backgroundColor: const Color(0xFFFAFAFA),
       body: BackgroundContainer(
-        opacity: 0.5,
+        opacity: 0.15,
         child: SafeArea(
           child: Column(
             children: [
               // Custom AppBar with Cart key passed
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 16,
+                ),
                 child: _BuildAppBar(cartKey: _cartKey),
               ),
-              
-              // Food Image Card (contained & non-overlapping) with Image key passed
+
+              // Food Image Card (contained & non-overlapping) with floating heart
               Expanded(
                 flex: 4,
-                child: Container(
-                  key: _imageKey,
-                  margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 16,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(24),
-                    child: widget.image.startsWith('http')
-                        ? Image.network(
-                            widget.image,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Icon(Icons.broken_image, size: 100),
-                          )
-                        : Image.asset(
-                            widget.image,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      key: _imageKey,
+                      margin: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.06),
+                            blurRadius: 16,
+                            offset: const Offset(0, 8),
                           ),
-                  ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: widget.image.startsWith('http')
+                            ? Image.network(
+                                widget.image,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Icon(Icons.broken_image, size: 100),
+                              )
+                            : Image.asset(
+                                widget.image,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              ),
+                      ),
+                    ),
+                    // Floating Heart Button
+                    Positioned(
+                      bottom: 0,
+                      right: 48,
+                      child: ValueListenableBuilder<List<FavoriteMeal>>(
+                        valueListenable:
+                            FavoriteManager.instance.favoritesNotifier,
+                        builder: (context, favorites, child) {
+                          final isFav = FavoriteManager.instance.isFavorite(
+                            widget.title,
+                          );
+                          return GestureDetector(
+                            onTap: () {
+                              final category =
+                                  widget.title.contains('Bánh Mì') ||
+                                      widget.title.contains('Bánh mỳ')
+                                  ? 'Bánh mỳ'
+                                  : 'Phở & Bún';
+                              FavoriteManager.instance.toggleFavorite(
+                                FavoriteMeal(
+                                  title: widget.title,
+                                  image: widget.image,
+                                  price: widget.price,
+                                  rating: widget.rating,
+                                  category: category,
+                                ),
+                              );
+                              ScaffoldMessenger.of(context).clearSnackBars();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    !isFav
+                                        ? 'Đã thêm "${widget.title}" vào yêu thích.'
+                                        : 'Đã xóa "${widget.title}" khỏi yêu thích.',
+                                  ),
+                                  duration: const Duration(seconds: 1),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.12),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              child: Icon(
+                                isFav ? Icons.favorite : Icons.favorite_border,
+                                color: AppColors.primaryRed,
+                                size: 26,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              
-              const SizedBox(height: 8),
+
+              const SizedBox(height: 12),
 
               // Details section container
               Expanded(
@@ -191,14 +265,14 @@ class _BuildAppBar extends StatelessWidget {
           GestureDetector(
             onTap: () => Navigator.pop(context),
             child: Container(
-              width: 37,
-              height: 37,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
+                shape: BoxShape.circle,
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: Colors.black.withOpacity(0.05),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -207,7 +281,7 @@ class _BuildAppBar extends StatelessWidget {
               child: const Center(
                 child: Icon(
                   Icons.arrow_back_ios_new,
-                  color: Colors.black,
+                  color: Colors.black87,
                   size: 18,
                 ),
               ),
@@ -258,36 +332,56 @@ class _BuildContainerMain extends StatelessWidget {
         '${totalPrice.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}đ';
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(30, 20, 30, 20),
+      padding: const EdgeInsets.fromLTRB(30, 24, 30, 20),
       width: double.infinity,
-      decoration: const BoxDecoration(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(30),
-          topRight: Radius.circular(30),
+      decoration: BoxDecoration(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(36),
+          topRight: Radius.circular(36),
         ),
-        color: Color(0xFFF5EFEB),
+        color: Colors.white.withOpacity(
+          0.92,
+        ), // Glassmorphism look showing gradients underneath
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 15,
+            offset: const Offset(0, -5),
+          ),
+        ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Quantity selector buttons
-          Container(
-            width: 150,
-            height: 45,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(30),
-              color: AppColors.primaryRed,
-            ),
-            child: _BuildButtonQuantity(
-              quantity: quantity,
-              onIncrement: onIncrement,
-              onDecrement: onDecrement,
+          // Quantity selector buttons centered
+          Center(
+            child: Container(
+              width: 130,
+              height: 40,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: AppColors.primaryRed,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primaryRed.withOpacity(0.2),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: _BuildButtonQuantity(
+                quantity: quantity,
+                onIncrement: onIncrement,
+                onDecrement: onDecrement,
+              ),
             ),
           ),
-          const SizedBox(height: 16),
-          
-          // Title and Price row
+          const SizedBox(height: 20),
+
+          // Title, tag & Price row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Column(
@@ -297,22 +391,28 @@ class _BuildContainerMain extends StatelessWidget {
                       title,
                       style: const TextStyle(
                         fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.black87,
+                        letterSpacing: -0.3,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w300,
-                        color: Colors.black.withValues(alpha: 0.5),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    const SizedBox(height: 6),
+                    // Summer Theme tag
+                    Row(
+                      children: const [
+                        Text('🌴', style: TextStyle(fontSize: 13)),
+                        SizedBox(width: 4),
+                        Text(
+                          'Món ngon giải nhiệt ngày hè!',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF2E7D32),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -322,83 +422,107 @@ class _BuildContainerMain extends StatelessWidget {
                 formattedPrice,
                 style: const TextStyle(
                   fontSize: 22,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w900,
                   color: AppColors.primaryRed,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          
-          // Info row (rating, calories, delivery time)
+          const SizedBox(height: 20),
+
+          // Summer Styled Info Row cards
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _BuildInfoFood(
-                icon: Icons.star,
+                icon: Icons.star_rounded,
                 text: rating,
-                iconColor: Colors.amber,
-              ),
-              const _BuildInfoFood(
-                icon: Icons.local_fire_department,
-                text: '150 KCal',
-                iconColor: Color(0xFFFF5722),
-                textColor: Color(0x80000000),
-                fontWeight: FontWeight.w400,
+                iconColor: Colors.amber.shade700,
+                bgColor: Colors.amber.withOpacity(0.12),
               ),
               _BuildInfoFood(
-                icon: Icons.timelapse,
-                text: prepTime ?? '5-10 phút',
-                iconColor: Colors.red,
-                textColor: const Color(0x80000000),
-                fontWeight: FontWeight.w400,
+                icon: Icons.local_fire_department_rounded,
+                text: '150 KCal',
+                iconColor: const Color(0xFFFF5722),
+                bgColor: const Color(0xFFFF5722).withOpacity(0.12),
+              ),
+              _BuildInfoFood(
+                icon: Icons.access_time_filled_rounded,
+                text: prepTime ?? '10-15 phút',
+                iconColor: Colors.blue.shade700,
+                bgColor: Colors.blue.withOpacity(0.12),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          
+          const SizedBox(height: 20),
+
           // Scrollable description text
           Expanded(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Text(
-                'Đây là biểu tượng ẩm thực đường phố độc đáo, gói trọn nét tinh tế và niềm tự hào của con người Việt.',
+                'Đây là biểu tượng ẩm thực độc đáo ngày hè, được chế biến với nguyên liệu tươi mát giải nhiệt hiệu quả. Trải nghiệm vị ngon đậm đà truyền thống và mang lại nguồn năng lượng sảng khoái mát lành.',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: Colors.black.withValues(alpha: 0.6),
+                  color: Colors.grey.shade700,
                   height: 1.5,
                 ),
               ),
             ),
           ),
           const SizedBox(height: 16),
-          
-          // Add to cart button
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryRed,
-              minimumSize: const Size(double.infinity, 50),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(25),
+
+          // Add to cart button with Summer sunset orange gradient
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(25),
+              gradient: const LinearGradient(
+                colors: [
+                  Color(0xFFFF5722), // Summer Orange
+                  Color(0xFFF22323), // Primary Red
+                ],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
               ),
-              elevation: 0,
-            ),
-            onPressed: onAddToCart,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Icon(Icons.shopping_cart, size: 22, color: Colors.white),
-                SizedBox(width: 10),
-                Text(
-                  'Thêm vào giỏ hàng',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primaryRed.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
                 ),
               ],
+            ),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                minimumSize: const Size(double.infinity, 52),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                elevation: 0,
+              ),
+              onPressed: onAddToCart,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(
+                    Icons.shopping_cart_rounded,
+                    size: 22,
+                    color: Colors.white,
+                  ),
+                  SizedBox(width: 10),
+                  Text(
+                    'Thêm vào giỏ hàng',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -411,33 +535,40 @@ class _BuildInfoFood extends StatelessWidget {
   final IconData icon;
   final String text;
   final Color iconColor;
+  final Color bgColor;
   final Color textColor;
-  final FontWeight fontWeight;
 
   const _BuildInfoFood({
     required this.icon,
     required this.text,
     required this.iconColor,
-    this.textColor = Colors.black,
-    this.fontWeight = FontWeight.w600,
+    required this.bgColor,
+    this.textColor = Colors.black87,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 30, color: iconColor),
-        const SizedBox(width: 5),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: fontWeight,
-            color: textColor,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 20, color: iconColor),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: textColor,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -459,19 +590,23 @@ class _BuildButtonQuantity extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         IconButton(
-          icon: const Icon(Icons.remove, color: Colors.white, size: 25),
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+          icon: const Icon(Icons.remove, color: Colors.white, size: 20),
           onPressed: onDecrement,
         ),
         Text(
           '$quantity',
           style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w400,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
         IconButton(
-          icon: const Icon(Icons.add, color: Colors.white, size: 25),
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+          icon: const Icon(Icons.add, color: Colors.white, size: 20),
           onPressed: onIncrement,
         ),
       ],
@@ -498,7 +633,8 @@ class FlyingFoodWidget extends StatefulWidget {
   State<FlyingFoodWidget> createState() => _FlyingFoodWidgetState();
 }
 
-class _FlyingFoodWidgetState extends State<FlyingFoodWidget> with SingleTickerProviderStateMixin {
+class _FlyingFoodWidgetState extends State<FlyingFoodWidget>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 
@@ -530,18 +666,23 @@ class _FlyingFoodWidgetState extends State<FlyingFoodWidget> with SingleTickerPr
       animation: _animation,
       builder: (context, child) {
         final double t = _animation.value;
-        
+
         // Quadratic Bezier Curve logic
-        final double controlX = widget.startOffset.dx + (widget.endOffset.dx - widget.startOffset.dx) * 0.3 + 90;
+        final double controlX =
+            widget.startOffset.dx +
+            (widget.endOffset.dx - widget.startOffset.dx) * 0.3 +
+            90;
         final double controlY = widget.startOffset.dy - 120;
-        
-        final double x = (1 - t) * (1 - t) * widget.startOffset.dx +
+
+        final double x =
+            (1 - t) * (1 - t) * widget.startOffset.dx +
             2 * (1 - t) * t * controlX +
             t * t * widget.endOffset.dx;
-        final double y = (1 - t) * (1 - t) * widget.startOffset.dy +
+        final double y =
+            (1 - t) * (1 - t) * widget.startOffset.dy +
             2 * (1 - t) * t * controlY +
             t * t * widget.endOffset.dy;
-            
+
         final double scale = 1.0 - (t * 0.65);
         final double opacity = 1.0 - (t * 0.15);
 
@@ -552,10 +693,7 @@ class _FlyingFoodWidgetState extends State<FlyingFoodWidget> with SingleTickerPr
             color: Colors.transparent,
             child: Opacity(
               opacity: opacity,
-              child: Transform.scale(
-                scale: scale,
-                child: child,
-              ),
+              child: Transform.scale(scale: scale, child: child),
             ),
           ),
         );
@@ -568,7 +706,7 @@ class _FlyingFoodWidgetState extends State<FlyingFoodWidget> with SingleTickerPr
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
+              color: Colors.black.withOpacity(0.15),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -594,7 +732,8 @@ class CartIconButton extends StatefulWidget {
   State<CartIconButton> createState() => _CartIconButtonState();
 }
 
-class _CartIconButtonState extends State<CartIconButton> with SingleTickerProviderStateMixin {
+class _CartIconButtonState extends State<CartIconButton>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   int _lastCount = 0;
@@ -607,8 +746,14 @@ class _CartIconButtonState extends State<CartIconButton> with SingleTickerProvid
       duration: const Duration(milliseconds: 350),
     );
     _scaleAnimation = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween<double>(begin: 1.0, end: 1.35), weight: 40),
-      TweenSequenceItem(tween: Tween<double>(begin: 1.35, end: 0.9), weight: 35),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.0, end: 1.35),
+        weight: 40,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.35, end: 0.9),
+        weight: 35,
+      ),
       TweenSequenceItem(tween: Tween<double>(begin: 0.9, end: 1.0), weight: 25),
     ]).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
@@ -629,8 +774,11 @@ class _CartIconButtonState extends State<CartIconButton> with SingleTickerProvid
     return ValueListenableBuilder<List<CartItem>>(
       valueListenable: CartManager.instance.itemsNotifier,
       builder: (context, items, child) {
-        final int count = items.fold<int>(0, (sum, item) => sum + item.quantity);
-        
+        final int count = items.fold<int>(
+          0,
+          (sum, item) => sum + item.quantity,
+        );
+
         if (count > _lastCount) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
@@ -650,14 +798,14 @@ class _CartIconButtonState extends State<CartIconButton> with SingleTickerProvid
               clipBehavior: Clip.none,
               children: [
                 Container(
-                  width: 37,
-                  height: 37,
+                  width: 38,
+                  height: 38,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(15),
                     color: Colors.white,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
+                        color: Colors.black.withOpacity(0.05),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -667,7 +815,7 @@ class _CartIconButtonState extends State<CartIconButton> with SingleTickerProvid
                     child: Icon(
                       Icons.shopping_cart_outlined,
                       color: AppColors.primaryRed,
-                      size: 20,
+                      size: 18,
                     ),
                   ),
                 ),
@@ -677,10 +825,8 @@ class _CartIconButtonState extends State<CartIconButton> with SingleTickerProvid
                     right: -5,
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 200),
-                      transitionBuilder: (child, animation) => ScaleTransition(
-                        scale: animation,
-                        child: child,
-                      ),
+                      transitionBuilder: (child, animation) =>
+                          ScaleTransition(scale: animation, child: child),
                       child: Container(
                         key: ValueKey<int>(count),
                         padding: const EdgeInsets.all(4),

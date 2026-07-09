@@ -1,31 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widget.dart';
+import '../widgets/food_card_widget.dart';
+import '../../data/favorite_manager.dart';
 import 'food_detail_page.dart';
-
-class FavoriteFoodItem {
-  final String id;
-  final String title;
-  final String image;
-  final String category; // 'Bánh mỳ', 'Phở & Bún'
-  final String rating;
-  final String storeName;
-  final String prepTime;
-  final String distance;
-  bool isFavorite;
-
-  FavoriteFoodItem({
-    required this.id,
-    required this.title,
-    required this.image,
-    required this.category,
-    required this.rating,
-    required this.storeName,
-    required this.prepTime,
-    required this.distance,
-    this.isFavorite = true,
-  });
-}
 
 class FavoritePage extends StatefulWidget {
   final VoidCallback onBack;
@@ -40,200 +18,213 @@ class _FavoritePageState extends State<FavoritePage> {
   String _selectedCategory = 'Tất cả';
   final List<String> _categories = ['Tất cả', 'Phở & Bún', 'Bánh mỳ'];
 
-  late List<FavoriteFoodItem> _favoriteItems;
-
-  @override
-  void initState() {
-    super.initState();
-    _favoriteItems = [
-      FavoriteFoodItem(
-        id: '1',
-        title: 'Bánh Mì - Đặc Sản',
-        image: 'assets/image/cooking_burger.png',
-        category: 'Bánh mỳ',
-        rating: '4.8',
-        storeName: 'Sà Bì Chưởng- Hà Nội',
-        prepTime: '25-30 phút',
-        distance: '1.2 km',
-      ),
-      FavoriteFoodItem(
-        id: '2',
-        title: 'Bún Bò Huế',
-        image: 'assets/image/hamberger.png',
-        category: 'Phở & Bún',
-        rating: '4.8',
-        storeName: 'Bún Chả Cửa Đông - Hoàn Kiếm',
-        prepTime: '25-30 phút',
-        distance: '1.2 km',
-      ),
-      FavoriteFoodItem(
-        id: '3',
-        title: 'Phở Gà Ta',
-        image: 'assets/image/pho_ga.png',
-        category: 'Phở & Bún',
-        rating: '4.9',
-        storeName: 'Phở Gà Lâm - Nam Ngư',
-        prepTime: '15-20 phút',
-        distance: '0.8 km',
-      ),
-      FavoriteFoodItem(
-        id: '4',
-        title: 'Bánh Mỳ Heo Quay',
-        image: 'assets/image/banner.png',
-        category: 'Bánh mỳ',
-        rating: '4.7',
-        storeName: 'Bánh Mì Phố - Bà Triệu',
-        prepTime: '10-15 phút',
-        distance: '1.5 km',
-      ),
-    ];
-  }
-
   @override
   Widget build(BuildContext context) {
-    // Filter items based on the selected category tag
-    final filteredItems = _favoriteItems.where((item) {
-      if (_selectedCategory == 'Tất cả') return item.isFavorite;
-      return item.isFavorite && item.category == _selectedCategory;
-    }).toList();
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F5F0),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFFAF7F4),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black, size: 28),
-          onPressed: widget.onBack,
-        ),
-        title: const Text(
-          'Món ăn yêu thích',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-      ),
+      backgroundColor: const Color(0xFFFAFAFA),
       body: BackgroundContainer(
-        opacity: 1.0,
-        child: Column(
-          children: [
-            // Category Filter Row
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-              child: Row(
-                children: _categories.map((category) {
-                  final isSelected = _selectedCategory == category;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 12),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(25),
-                      onTap: () {
-                        setState(() {
-                          _selectedCategory = category;
-                        });
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isSelected ? AppColors.primaryRed : Colors.white,
-                          borderRadius: BorderRadius.circular(25),
-                          border: Border.all(
-                            color: isSelected
-                                ? AppColors.primaryRed
-                                : Colors.grey.shade300,
-                            width: 1,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.04),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
+        opacity: 0.15,
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Custom AppBar
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: widget.onBack,
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            margin: const EdgeInsets.only(right: 16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: Text(
-                          category,
-                          style: TextStyle(
-                            color: isSelected ? Colors.white : Colors.black87,
-                            fontSize: 15,
-                            fontWeight:
-                                isSelected ? FontWeight.bold : FontWeight.w500,
+                            child: const Icon(
+                              Icons.arrow_back_ios_new,
+                              color: Colors.black87,
+                              size: 20,
+                            ),
                           ),
                         ),
+                        const Text(
+                          'Yêu thích',
+                          style: TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryRed.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.favorite,
+                        color: AppColors.primaryRed,
+                        size: 24,
                       ),
                     ),
-                  );
-                }).toList(),
+                  ],
+                ),
               ),
-            ),
 
-            // Favorites List
-            Expanded(
-              child: filteredItems.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.favorite_border,
-                            size: 80,
-                            color: Colors.grey.shade400,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Chưa có món ăn yêu thích nào',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey.shade600,
-                              fontWeight: FontWeight.w500,
+              // Category Filter Row
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  child: Row(
+                    children: _categories.map((category) {
+                      final isSelected = _selectedCategory == category;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 10),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: () {
+                            setState(() {
+                              _selectedCategory = category;
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isSelected ? AppColors.primaryRed : Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: isSelected
+                                    ? AppColors.primaryRed
+                                    : Colors.grey.withOpacity(0.15),
+                                width: 1,
+                              ),
+                              boxShadow: isSelected
+                                  ? [
+                                      BoxShadow(
+                                        color: AppColors.primaryRed.withOpacity(0.2),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 2),
+                                      )
+                                    ]
+                                  : [],
+                            ),
+                            child: Text(
+                              category,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: isSelected ? Colors.white : Colors.black54,
+                              ),
                             ),
                           ),
-                          if (_selectedCategory != 'Tất cả') ...[
-                            const SizedBox(height: 8),
-                            TextButton(
-                              onPressed: () {
-                                setState(() {
-                                  _selectedCategory = 'Tất cả';
-                                });
-                              },
-                              child: const Text(
-                                'Xem tất cả',
-                                style: TextStyle(
-                                  color: AppColors.primaryRed,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Favorites List listening to FavoriteManager reactively
+              Expanded(
+                child: ValueListenableBuilder<List<FavoriteMeal>>(
+                  valueListenable: FavoriteManager.instance.favoritesNotifier,
+                  builder: (context, favorites, child) {
+                    final filteredItems = favorites.where((item) {
+                      if (_selectedCategory == 'Tất cả') return true;
+                      return item.category == _selectedCategory;
+                    }).toList();
+
+                    if (filteredItems.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.withOpacity(0.05),
+                                shape: BoxShape.circle,
                               ),
-                            )
-                          ]
-                        ],
+                              child: Icon(
+                                Icons.favorite_border_rounded,
+                                size: 70,
+                                color: Colors.grey.shade400,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            Text(
+                              'Không có món ăn nào yêu thích',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            if (_selectedCategory != 'Tất cả') ...[
+                              const SizedBox(height: 12),
+                              TextButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _selectedCategory = 'Tất cả';
+                                  });
+                                },
+                                child: const Text(
+                                  'Xem tất cả món',
+                                  style: TextStyle(
+                                    color: AppColors.primaryRed,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              )
+                            ]
+                          ],
+                        ),
+                      );
+                    }
+
+                    return ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: BouncingScrollPhysics(),
                       ),
-                    )
-                  : ListView.builder(
-                      physics: const BouncingScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
                       itemCount: filteredItems.length,
                       itemBuilder: (context, index) {
                         final item = filteredItems[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 20),
-                          child: _buildFoodCard(item),
-                        );
+                        return _buildFoodCard(item);
                       },
-                    ),
-            ),
-          ],
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildFoodCard(FavoriteFoodItem item) {
+  Widget _buildFoodCard(FavoriteMeal item) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -242,7 +233,7 @@ class _FavoritePageState extends State<FavoritePage> {
             builder: (context) => FoodDetailPage(
               title: item.title,
               image: item.image,
-              price: "35.000đ",
+              price: item.price,
               rating: item.rating,
               prepTime: item.prepTime,
             ),
@@ -250,211 +241,127 @@ class _FavoritePageState extends State<FavoritePage> {
         );
       },
       child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
-            ),
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
           ],
+          border: Border.all(
+            color: Colors.grey.withOpacity(0.06),
+            width: 1,
+          ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            // Food Image + Heart Toggle Stack
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(24),
-                  ),
-                  child: Image.asset(
-                    item.image,
-                    height: 190,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                // Favorite toggle heart button
-                Positioned(
-                  top: 16,
-                  right: 16,
-                  child: GestureDetector(
-                    onTap: () {
-                      _toggleFavorite(item);
-                    },
-                    child: Container(
-                      width: 38,
-                      height: 38,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 6,
-                            offset: Offset(0, 3),
-                          ),
-                        ],
+            // Food Image
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                width: 90,
+                height: 90,
+                color: Colors.grey.shade100,
+                child: item.image.startsWith('http')
+                    ? Image.network(
+                        item.image,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(Icons.broken_image, size: 24, color: Colors.grey),
+                      )
+                    : Image.asset(
+                        item.image,
+                        fit: BoxFit.cover,
                       ),
-                      child: Icon(
-                        item.isFavorite ? Icons.favorite : Icons.favorite_border,
-                        color: AppColors.primaryRed,
-                        size: 22,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
+            const SizedBox(width: 16),
 
-            // Details section
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
+            // Food Details
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title and Rating badge row
+                  Text(
+                    item.title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 6),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(
-                        child: Text(
-                          item.title,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                      Icon(Icons.star_rounded, color: Colors.amber.shade600, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        item.rating,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black54,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF2E7D32), // Dark Green
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.star, color: Colors.white, size: 14),
-                            const SizedBox(width: 4),
-                            Text(
-                              item.rating,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
+                      const SizedBox(width: 8),
+                      Text(
+                        '• ${item.prepTime}',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: Colors.grey.shade500,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
-
-                  // Storefront name row
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.storefront_outlined,
-                        color: Colors.grey.shade600,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          item.storeName,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade700,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-
-                  // Info row (prep time and distance)
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.access_time,
-                        color: Colors.grey.shade600,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        item.prepTime,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade700,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(width: 24),
-                      Icon(
-                        Icons.location_on_outlined,
-                        color: Colors.grey.shade600,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        item.distance,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade700,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: 6),
+                  Text(
+                    item.price,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.primaryRed,
+                    ),
                   ),
                 ],
+              ),
+            ),
+            const SizedBox(width: 8),
+
+            // Right Side Heart (Click to remove from favorites)
+            GestureDetector(
+              onTap: () {
+                FavoriteManager.instance.toggleFavorite(item);
+                ScaffoldMessenger.of(context).clearSnackBars();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Đã xóa "${item.title}" khỏi yêu thích.'),
+                    duration: const Duration(seconds: 1),
+                  ),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.05),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.favorite_rounded,
+                  color: AppColors.primaryRed,
+                  size: 18,
+                ),
               ),
             ),
           ],
         ),
       ),
     );
-  }
-
-  void _toggleFavorite(FavoriteFoodItem item) {
-    setState(() {
-      item.isFavorite = !item.isFavorite;
-    });
-
-    final snackBar = SnackBar(
-      content: Text(
-        item.isFavorite
-            ? 'Đã thêm "${item.title}" vào yêu thích.'
-            : 'Đã xóa "${item.title}" khỏi yêu thích.',
-      ),
-      duration: const Duration(seconds: 2),
-      action: SnackBarAction(
-        label: 'Hoàn tác',
-        textColor: Colors.amber,
-        onPressed: () {
-          setState(() {
-            item.isFavorite = !item.isFavorite;
-          });
-        },
-      ),
-    );
-
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 }
