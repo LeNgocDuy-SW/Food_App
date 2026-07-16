@@ -4,6 +4,7 @@ import 'package:food_app/features/cart/data/cart_manager.dart';
 import 'package:food_app/features/cart/domain/entities/cart_item.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widget.dart';
+import 'package:provider/provider.dart';
 
 class SearchBarWidget extends StatelessWidget {
   const SearchBarWidget({super.key});
@@ -31,7 +32,11 @@ class SearchBarWidget extends StatelessWidget {
                   ),
                 ],
               ),
-              child: const Icon(Icons.menu_rounded, color: AppColors.primaryRed, size: 28),
+              child: const Icon(
+                Icons.menu_rounded,
+                color: AppColors.primaryRed,
+                size: 28,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -80,7 +85,8 @@ class HomeCartButton extends StatefulWidget {
   State<HomeCartButton> createState() => _HomeCartButtonState();
 }
 
-class _HomeCartButtonState extends State<HomeCartButton> with SingleTickerProviderStateMixin {
+class _HomeCartButtonState extends State<HomeCartButton>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   int _lastCount = 0;
@@ -118,13 +124,10 @@ class _HomeCartButtonState extends State<HomeCartButton> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<List<CartItem>>(
-      valueListenable: CartManager.instance.itemsNotifier,
-      builder: (context, items, child) {
-        final int count = items.fold<int>(
-          0,
-          (sum, item) => sum + item.quantity,
-        );
+    return Consumer<CartManager>(
+      builder: (context, carts, child) {
+        final item = carts.items;
+        final int count = item.fold<int>(0, (sum, item) => sum + item.quantity);
 
         if (count > _lastCount) {
           WidgetsBinding.instance.addPostFrameCallback((_) {

@@ -5,6 +5,7 @@ import '../../../../features/cart/data/cart_manager.dart';
 import '../../../../features/cart/presentation/pages/cart_page.dart';
 import '../../data/order_manager.dart';
 import 'order_detail_page.dart';
+import 'package:provider/provider.dart';
 
 class OrderHistoryPage extends StatefulWidget {
   const OrderHistoryPage({super.key});
@@ -53,7 +54,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
 
   void _reorder(BuildContext context, OrderHistoryItem order) {
     for (var item in order.items) {
-      CartManager.instance.addItem(item);
+      context.read<CartManager>().addItem(item);
     }
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -76,7 +77,10 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
             children: [
               // Custom AppBar consistent with others
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -212,10 +216,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(
-          color: Colors.grey.withOpacity(0.06),
-          width: 1,
-        ),
+        border: Border.all(color: Colors.grey.withOpacity(0.06), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -248,7 +249,10 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
               ),
               // Status Badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: statusColor.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(10),
@@ -286,12 +290,13 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                                 item.image,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) =>
-                                    const Icon(Icons.broken_image, size: 16, color: Colors.grey),
+                                    const Icon(
+                                      Icons.broken_image,
+                                      size: 16,
+                                      color: Colors.grey,
+                                    ),
                               )
-                            : Image.asset(
-                                item.image,
-                                fit: BoxFit.cover,
-                              ),
+                            : Image.asset(item.image, fit: BoxFit.cover),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -348,12 +353,15 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                   ),
                 ],
               ),
-              
+
               // Reorder Button
               GestureDetector(
                 onTap: () => _reorder(context, order),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(15),
                     gradient: const LinearGradient(
@@ -367,7 +375,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                         color: AppColors.primaryRed.withOpacity(0.2),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
-                      )
+                      ),
                     ],
                   ),
                   child: Row(

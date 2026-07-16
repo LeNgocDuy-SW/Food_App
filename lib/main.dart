@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:food_app/features/food_catalog/presentation/widgets/taskbar_widget.dart';
+import 'package:provider/provider.dart';
+import 'package:food_app/features/cart/data/cart_manager.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [ChangeNotifierProvider(create: (_) => CartManager())],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

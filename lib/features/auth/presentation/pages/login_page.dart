@@ -9,6 +9,7 @@ import '../widgets/login_with.dart';
 import 'forgot_page.dart';
 import 'signup_page.dart';
 import 'package:food_app/features/food_catalog/presentation/widgets/taskbar_widget.dart';
+import 'package:food_app/features/food_catalog/presentation/pages/food_home_page.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -93,6 +94,7 @@ class LoginPage extends StatelessWidget {
                           LoginButton(
                             title: 'Login',
                             onPressed: () {
+                              FoodHomePage.hasShownAd = false; // Reset banner show state for the new session
                               Navigator.pushReplacement(
                                 context,
                                 createRoute(const TaskBarWidget()),

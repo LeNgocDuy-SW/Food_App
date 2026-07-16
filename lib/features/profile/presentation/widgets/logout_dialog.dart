@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../auth/presentation/pages/login_page.dart';
+import '../../../food_catalog/presentation/pages/food_home_page.dart';
 
 class LogoutDialog extends StatelessWidget {
   const LogoutDialog({super.key});
@@ -50,9 +51,13 @@ class LogoutDialog extends StatelessWidget {
                     elevation: 0,
                   ),
                   onPressed: () {
+                    FoodHomePage.hasShownAd =
+                        false; // Reset banner show state for the next session
                     Navigator.pushAndRemoveUntil(
                       context,
-                      MaterialPageRoute(builder: (context) => const LoginPage()),
+                      MaterialPageRoute(
+                        builder: (context) => const LoginPage(),
+                      ),
                       (route) => false,
                     );
                     ScaffoldMessenger.of(context).showSnackBar(

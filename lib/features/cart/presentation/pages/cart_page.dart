@@ -4,6 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widget.dart';
 import '../../domain/entities/cart_item.dart';
 import '../../data/cart_manager.dart';
+import 'package:provider/provider.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -53,7 +54,10 @@ class _CartPageState extends State<CartPage> {
             children: [
               // Custom Header / AppBar consistent with the app
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -108,13 +112,13 @@ class _CartPageState extends State<CartPage> {
                   ],
                 ),
               ),
-              
+
               // Cart Items List
               Expanded(
-                child: ValueListenableBuilder<List<CartItem>>(
-                  valueListenable: CartManager.instance.itemsNotifier,
+                child: Consumer<CartManager>(
                   builder: (context, cartItems, child) {
-                    if (cartItems.isEmpty) {
+                    final cartList = cartItems.items;
+                    if (cartList.isEmpty) {
                       return Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -147,9 +151,9 @@ class _CartPageState extends State<CartPage> {
                     return ListView.builder(
                       physics: const BouncingScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
-                      itemCount: cartItems.length,
+                      itemCount: cartList.length,
                       itemBuilder: (context, index) {
-                        final item = cartItems[index];
+                        final item = cartList[index];
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 16),
                           child: _buildCartItemCard(context, item),
@@ -179,12 +183,9 @@ class _CartPageState extends State<CartPage> {
             color: Colors.black.withOpacity(0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
-        border: Border.all(
-          color: Colors.grey.withOpacity(0.06),
-          width: 1,
-        ),
+        border: Border.all(color: Colors.grey.withOpacity(0.06), width: 1),
       ),
       child: Row(
         children: [
@@ -199,13 +200,13 @@ class _CartPageState extends State<CartPage> {
                   ? Image.network(
                       item.image,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.broken_image, size: 30, color: Colors.grey),
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.broken_image,
+                        size: 30,
+                        color: Colors.grey,
+                      ),
                     )
-                  : Image.asset(
-                      item.image,
-                      fit: BoxFit.cover,
-                    ),
+                  : Image.asset(item.image, fit: BoxFit.cover),
             ),
           ),
           const SizedBox(width: 16),
@@ -236,7 +237,8 @@ class _CartPageState extends State<CartPage> {
                       const SizedBox(width: 8),
                       // Modern, subtle delete button instead of overlapping badge
                       GestureDetector(
-                        onTap: () => CartManager.instance.removeItem(item),
+                        onTap: () =>
+                            context.read<CartManager>().removeItem(item),
                         child: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
@@ -252,7 +254,7 @@ class _CartPageState extends State<CartPage> {
                       ),
                     ],
                   ),
-                  
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -265,7 +267,7 @@ class _CartPageState extends State<CartPage> {
                           color: AppColors.primaryRed,
                         ),
                       ),
-                      
+
                       // Modern Rounded Quantity Selector (no solid color background, thin border instead)
                       Container(
                         height: 32,
@@ -280,10 +282,19 @@ class _CartPageState extends State<CartPage> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             GestureDetector(
-                              onTap: () => CartManager.instance.decrementQuantity(item),
+                              onTap: () => context
+                                  .read<CartManager>()
+                                  .decrementQuantity(item),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                child: Icon(Icons.remove, color: Colors.grey.shade700, size: 14),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                child: Icon(
+                                  Icons.remove,
+                                  color: Colors.grey.shade700,
+                                  size: 14,
+                                ),
                               ),
                             ),
                             Text(
@@ -295,10 +306,19 @@ class _CartPageState extends State<CartPage> {
                               ),
                             ),
                             GestureDetector(
-                              onTap: () => CartManager.instance.incrementQuantity(item),
+                              onTap: () => context
+                                  .read<CartManager>()
+                                  .incrementQuantity(item),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                child: Icon(Icons.add, color: Colors.grey.shade700, size: 14),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                child: Icon(
+                                  Icons.add,
+                                  color: Colors.grey.shade700,
+                                  size: 14,
+                                ),
                               ),
                             ),
                           ],
@@ -316,12 +336,15 @@ class _CartPageState extends State<CartPage> {
   }
 
   Widget _buildBottomSummary(BuildContext context) {
-    return ValueListenableBuilder<List<CartItem>>(
-      valueListenable: CartManager.instance.itemsNotifier,
+    return Consumer<CartManager>(
       builder: (context, cartItems, child) {
-        final subtotal = cartItems.fold<int>(0, (sum, item) => sum + (item.price * item.quantity));
+        final cartItem = cartItems.items;
+        final subtotal = cartItem.fold<int>(
+          0,
+          (sum, item) => sum + (item.price * item.quantity),
+        );
         final deliveryFee = subtotal > 0 ? 10000 : 0;
-        
+
         // Tính toán giảm giá theo mã giảm giá áp dụng
         int discount = 0;
         if (_appliedVoucher != null) {
@@ -334,7 +357,7 @@ class _CartPageState extends State<CartPage> {
             }
           }
         }
-        
+
         final total = (subtotal + deliveryFee - discount).clamp(0, 99999999);
 
         return Container(
@@ -345,13 +368,15 @@ class _CartPageState extends State<CartPage> {
               topLeft: Radius.circular(32),
               topRight: Radius.circular(32),
             ),
-            color: Colors.white.withOpacity(0.92), // Glassmorphism background consistent with details sheet
+            color: Colors.white.withOpacity(
+              0.92,
+            ), // Glassmorphism background consistent with details sheet
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.05),
                 blurRadius: 15,
                 offset: const Offset(0, -5),
-              )
+              ),
             ],
           ),
           child: Column(
@@ -360,7 +385,7 @@ class _CartPageState extends State<CartPage> {
               // Voucher / Coupon Entry Card (Đã được làm tương tác đầy đủ)
               _buildVoucherCard(),
               const SizedBox(height: 16),
-              
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -451,7 +476,7 @@ class _CartPageState extends State<CartPage> {
                 ],
               ),
               const SizedBox(height: 20),
-              
+
               // Pay button with Summer sunset orange gradient
               Container(
                 decoration: BoxDecoration(
@@ -469,7 +494,7 @@ class _CartPageState extends State<CartPage> {
                       color: AppColors.primaryRed.withOpacity(0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
-                    )
+                    ),
                   ],
                 ),
                 child: ElevatedButton(
@@ -483,16 +508,22 @@ class _CartPageState extends State<CartPage> {
                     elevation: 0,
                   ),
                   onPressed: () {
-                    if (cartItems.isEmpty) return;
+                    if (cartItem.isEmpty) return;
                     Navigator.push(
-                      context, 
-                      createRoute(CheckoutPage(initialVoucher: _appliedVoucher))
+                      context,
+                      createRoute(
+                        CheckoutPage(initialVoucher: _appliedVoucher),
+                      ),
                     );
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: const [
-                      Icon(Icons.payments_rounded, size: 22, color: Colors.white),
+                      Icon(
+                        Icons.payments_rounded,
+                        size: 22,
+                        color: Colors.white,
+                      ),
                       SizedBox(width: 10),
                       Text(
                         'Tiến hành thanh toán',
@@ -522,8 +553,8 @@ class _CartPageState extends State<CartPage> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: _appliedVoucher != null 
-                ? Colors.green.withOpacity(0.5) 
+            color: _appliedVoucher != null
+                ? Colors.green.withOpacity(0.5)
                 : Colors.grey.withOpacity(0.12),
             width: 1,
           ),
@@ -535,15 +566,19 @@ class _CartPageState extends State<CartPage> {
               child: Row(
                 children: [
                   Icon(
-                    _appliedVoucher != null ? Icons.check_circle_outline_rounded : Icons.local_offer_outlined,
-                    color: _appliedVoucher != null ? Colors.green : AppColors.primaryRed,
+                    _appliedVoucher != null
+                        ? Icons.check_circle_outline_rounded
+                        : Icons.local_offer_outlined,
+                    color: _appliedVoucher != null
+                        ? Colors.green
+                        : AppColors.primaryRed,
                     size: 20,
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      _appliedVoucher != null 
-                          ? 'Đã áp dụng: ${_appliedVoucher!.code}' 
+                      _appliedVoucher != null
+                          ? 'Đã áp dụng: ${_appliedVoucher!.code}'
                           : 'Ưu đãi & Voucher',
                       style: const TextStyle(
                         fontSize: 14,
@@ -560,12 +595,14 @@ class _CartPageState extends State<CartPage> {
             Row(
               children: [
                 Text(
-                  _appliedVoucher != null 
-                      ? _appliedVoucher!.description 
+                  _appliedVoucher != null
+                      ? _appliedVoucher!.description
                       : 'Chọn hoặc nhập mã',
                   style: TextStyle(
                     fontSize: 12,
-                    color: _appliedVoucher != null ? Colors.green.shade700 : Colors.grey.shade500,
+                    color: _appliedVoucher != null
+                        ? Colors.green.shade700
+                        : Colors.grey.shade500,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -579,18 +616,29 @@ class _CartPageState extends State<CartPage> {
                     },
                     child: Container(
                       margin: const EdgeInsets.only(right: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.red.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Text(
                         'Hủy',
-                        style: TextStyle(color: Colors.red, fontSize: 11, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
-                Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Colors.grey.shade400),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 12,
+                  color: Colors.grey.shade400,
+                ),
               ],
             ),
           ],
@@ -640,7 +688,10 @@ class _CartPageState extends State<CartPage> {
                     const SizedBox(height: 20),
                     const Text(
                       'Ưu đãi & Voucher',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Row(
@@ -650,15 +701,25 @@ class _CartPageState extends State<CartPage> {
                             controller: localController,
                             decoration: InputDecoration(
                               hintText: 'Nhập mã giảm giá (VD: GIAMGIA50)...',
-                              hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              hintStyle: TextStyle(
+                                color: Colors.grey.shade400,
+                                fontSize: 13,
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide(color: Colors.grey.shade300),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide(color: Colors.grey.shade200),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade200,
+                                ),
                               ),
                               errorText: localError,
                             ),
@@ -677,9 +738,11 @@ class _CartPageState extends State<CartPage> {
                             elevation: 0,
                           ),
                           onPressed: () {
-                            final code = localController.text.trim().toUpperCase();
+                            final code = localController.text
+                                .trim()
+                                .toUpperCase();
                             if (code.isEmpty) return;
-                            
+
                             Voucher? foundVoucher;
                             if (code == 'GIAMGIA50') {
                               foundVoucher = Voucher(
@@ -689,7 +752,9 @@ class _CartPageState extends State<CartPage> {
                                 maxDiscount: 50000,
                               );
                             } else {
-                              final idx = _availableVouchers.indexWhere((element) => element.code == code);
+                              final idx = _availableVouchers.indexWhere(
+                                (element) => element.code == code,
+                              );
                               if (idx >= 0) {
                                 foundVoucher = _availableVouchers[idx];
                               }
@@ -703,7 +768,9 @@ class _CartPageState extends State<CartPage> {
                               ScaffoldMessenger.of(context).clearSnackBars();
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Đã áp dụng mã ${foundVoucher.code}!'),
+                                  content: Text(
+                                    'Đã áp dụng mã ${foundVoucher.code}!',
+                                  ),
                                   duration: const Duration(seconds: 2),
                                 ),
                               );
@@ -713,14 +780,24 @@ class _CartPageState extends State<CartPage> {
                               });
                             }
                           },
-                          child: const Text('Áp dụng', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                          child: const Text(
+                            'Áp dụng',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 24),
                     const Text(
                       'Ưu đãi có sẵn cho bạn',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black54),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black54,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     ConstrainedBox(
@@ -738,17 +815,23 @@ class _CartPageState extends State<CartPage> {
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: isApplied ? Colors.green : Colors.grey.withOpacity(0.12),
+                                color: isApplied
+                                    ? Colors.green
+                                    : Colors.grey.withOpacity(0.12),
                                 width: isApplied ? 1.5 : 1,
                               ),
                             ),
                             child: Row(
                               children: [
-                                const Text('🎫', style: TextStyle(fontSize: 24)),
+                                const Text(
+                                  '🎫',
+                                  style: TextStyle(fontSize: 24),
+                                ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         v.code,
@@ -761,15 +844,22 @@ class _CartPageState extends State<CartPage> {
                                       const SizedBox(height: 4),
                                       Text(
                                         v.description,
-                                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade600,
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ),
                                 ElevatedButton(
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: isApplied ? Colors.green : Colors.grey.shade100,
-                                    foregroundColor: isApplied ? Colors.white : Colors.black87,
+                                    backgroundColor: isApplied
+                                        ? Colors.green
+                                        : Colors.grey.shade100,
+                                    foregroundColor: isApplied
+                                        ? Colors.white
+                                        : Colors.black87,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
@@ -781,17 +871,24 @@ class _CartPageState extends State<CartPage> {
                                       _appliedVoucher = v;
                                     });
                                     Navigator.pop(context);
-                                    ScaffoldMessenger.of(context).clearSnackBars();
+                                    ScaffoldMessenger.of(
+                                      context,
+                                    ).clearSnackBars();
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text('Đã áp dụng mã ${v.code}!'),
+                                        content: Text(
+                                          'Đã áp dụng mã ${v.code}!',
+                                        ),
                                         duration: const Duration(seconds: 2),
                                       ),
                                     );
                                   },
                                   child: Text(
                                     isApplied ? 'Đã áp' : 'Dùng',
-                                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                               ],

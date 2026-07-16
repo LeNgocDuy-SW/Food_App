@@ -31,6 +31,8 @@ class MealData {
 class FoodHomePage extends StatefulWidget {
   const FoodHomePage({super.key});
 
+  static bool hasShownAd = false;
+
   @override
   State<FoodHomePage> createState() => _FoodHomePageState();
 }
@@ -192,9 +194,12 @@ class _FoodHomePageState extends State<FoodHomePage> {
     _loadAllApiData();
 
     // Tự động hiển thị Banner quảng cáo mùa hè khi mở app
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _showSummerAdBanner(context);
-    });
+    if (!FoodHomePage.hasShownAd) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showSummerAdBanner(context);
+      });
+      FoodHomePage.hasShownAd = true;
+    }
   }
 
   Future<void> _loadAllApiData() async {

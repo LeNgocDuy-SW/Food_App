@@ -35,7 +35,10 @@ class _TaskBarWidgetState extends State<TaskBarWidget> {
 
     return Scaffold(
       extendBody: true, // Content scrolls under the glass bar
-      body: pages[_selectedIndex],
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: pages,
+      ),
       bottomNavigationBar: Container(
         height: 70 + bottomPadding,
         decoration: BoxDecoration(

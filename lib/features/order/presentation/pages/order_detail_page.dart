@@ -5,6 +5,7 @@ import '../../../../features/cart/data/cart_manager.dart';
 import '../../../../features/cart/presentation/pages/cart_page.dart';
 import '../../data/order_manager.dart';
 import 'order_tracking_page.dart';
+import 'package:provider/provider.dart';
 
 class OrderDetailPage extends StatelessWidget {
   final OrderHistoryItem order;
@@ -62,7 +63,7 @@ class OrderDetailPage extends StatelessWidget {
 
   void _reorder(BuildContext context) {
     for (var item in order.items) {
-      CartManager.instance.addItem(item);
+      context.read<CartManager>().addItem(item);
     }
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -77,9 +78,15 @@ class OrderDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusColor = _getStatusColor(order.status);
-    final int subtotal = order.items.fold<int>(0, (sum, item) => sum + (item.price * item.quantity));
+    final int subtotal = order.items.fold<int>(
+      0,
+      (sum, item) => sum + (item.price * item.quantity),
+    );
     final int deliveryFee = 10000;
-    final int discount = (subtotal + deliveryFee - order.totalPrice).clamp(0, 999999);
+    final int discount = (subtotal + deliveryFee - order.totalPrice).clamp(
+      0,
+      999999,
+    );
 
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA),
@@ -91,7 +98,10 @@ class OrderDetailPage extends StatelessWidget {
             children: [
               // Custom AppBar consistent with other pages
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -156,22 +166,22 @@ class OrderDetailPage extends StatelessWidget {
                     // Card 1: Order Code & State Timeline
                     _buildStatusTimelineCard(statusColor),
                     const SizedBox(height: 16),
-                    
+
                     // Card 2: Delivery Location Address
                     _buildDeliveryAddressCard(),
                     const SizedBox(height: 16),
-                    
+
                     // Card 3: Food Items List
                     _buildFoodItemsCard(),
                     const SizedBox(height: 16),
-                    
+
                     // Card 4: Payment Details & Invoice receipt summary
                     _buildReceiptBreakdownCard(subtotal, deliveryFee, discount),
                     const SizedBox(height: 24),
                   ],
                 ),
               ),
-              
+
               // Floating bottom reorder action button
               _buildBottomActionBar(context),
             ],
@@ -185,7 +195,8 @@ class OrderDetailPage extends StatelessWidget {
     // Determine active steps based on order status
     bool step1 = true; // Đã đặt đơn
     bool step2 = true; // Đang chuẩn bị
-    bool step3 = order.status == 'Đang giao' || order.status == 'Đã giao'; // Đang giao
+    bool step3 =
+        order.status == 'Đang giao' || order.status == 'Đã giao'; // Đang giao
     bool step4 = order.status == 'Đã giao'; // Đã giao
 
     return Container(
@@ -210,17 +221,28 @@ class OrderDetailPage extends StatelessWidget {
             children: [
               Text(
                 order.orderId,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: statusColor.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
                   order.status,
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: statusColor),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: statusColor,
+                  ),
                 ),
               ),
             ],
@@ -228,20 +250,39 @@ class OrderDetailPage extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             'Thời gian đặt: ${_formatDate(order.orderDate)}',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontWeight: FontWeight.w500),
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade500,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           const SizedBox(height: 24),
-          
+
           // Timeline indicator
           Row(
             children: [
-              _buildTimelineNode(Icons.assignment_turned_in_rounded, 'Đặt đơn', step1, true),
+              _buildTimelineNode(
+                Icons.assignment_turned_in_rounded,
+                'Đặt đơn',
+                step1,
+                true,
+              ),
               _buildTimelineConnector(step2),
               _buildTimelineNode(Icons.cookie_rounded, 'Chuẩn bị', step2, true),
               _buildTimelineConnector(step3),
-              _buildTimelineNode(Icons.delivery_dining_rounded, 'Đang giao', step3, true),
+              _buildTimelineNode(
+                Icons.delivery_dining_rounded,
+                'Đang giao',
+                step3,
+                true,
+              ),
               _buildTimelineConnector(step4),
-              _buildTimelineNode(Icons.check_circle_rounded, 'Đã giao', step4, false),
+              _buildTimelineNode(
+                Icons.check_circle_rounded,
+                'Đã giao',
+                step4,
+                false,
+              ),
             ],
           ),
         ],
@@ -249,17 +290,26 @@ class OrderDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTimelineNode(IconData icon, String label, bool isActive, bool hasConnector) {
+  Widget _buildTimelineNode(
+    IconData icon,
+    String label,
+    bool isActive,
+    bool hasConnector,
+  ) {
     return Expanded(
       child: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: isActive ? Colors.green.withOpacity(0.1) : Colors.grey.shade100,
+              color: isActive
+                  ? Colors.green.withOpacity(0.1)
+                  : Colors.grey.shade100,
               shape: BoxShape.circle,
               border: Border.all(
-                color: isActive ? Colors.green.withOpacity(0.3) : Colors.grey.shade200,
+                color: isActive
+                    ? Colors.green.withOpacity(0.3)
+                    : Colors.grey.shade200,
                 width: 1,
               ),
             ),
@@ -288,7 +338,9 @@ class OrderDetailPage extends StatelessWidget {
     return Container(
       width: 20,
       height: 2,
-      margin: const EdgeInsets.only(bottom: 22), // Align vertically centered with node icons
+      margin: const EdgeInsets.only(
+        bottom: 22,
+      ), // Align vertically centered with node icons
       color: isActive ? Colors.green : Colors.grey.shade200,
     );
   }
@@ -328,14 +380,22 @@ class OrderDetailPage extends StatelessWidget {
               const SizedBox(width: 12),
               const Text(
                 'Địa chỉ nhận hàng',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 12),
           Text(
             order.address,
-            style: const TextStyle(fontSize: 13, color: Colors.black87, height: 1.4),
+            style: const TextStyle(
+              fontSize: 13,
+              color: Colors.black87,
+              height: 1.4,
+            ),
           ),
           if (order.note.isNotEmpty) ...[
             const SizedBox(height: 10),
@@ -348,12 +408,20 @@ class OrderDetailPage extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.edit_note_rounded, color: AppColors.primaryRed, size: 18),
+                  const Icon(
+                    Icons.edit_note_rounded,
+                    color: AppColors.primaryRed,
+                    size: 18,
+                  ),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       'Ghi chú: ${order.note}',
-                      style: TextStyle(fontSize: 12.5, color: Colors.grey.shade700, fontStyle: FontStyle.italic),
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: Colors.grey.shade700,
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
                   ),
                 ],
@@ -389,14 +457,18 @@ class OrderDetailPage extends StatelessWidget {
               SizedBox(width: 8),
               Text(
                 'Sản phẩm đã chọn',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 12),
           const Divider(height: 1, thickness: 0.5, color: Colors.black12),
           const SizedBox(height: 12),
-          
+
           Column(
             children: order.items.map((item) {
               return Padding(
@@ -414,12 +486,13 @@ class OrderDetailPage extends StatelessWidget {
                                 item.image,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) =>
-                                    const Icon(Icons.broken_image, size: 16, color: Colors.grey),
+                                    const Icon(
+                                      Icons.broken_image,
+                                      size: 16,
+                                      color: Colors.grey,
+                                    ),
                               )
-                            : Image.asset(
-                                item.image,
-                                fit: BoxFit.cover,
-                              ),
+                            : Image.asset(item.image, fit: BoxFit.cover),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -429,21 +502,32 @@ class OrderDetailPage extends StatelessWidget {
                         children: [
                           Text(
                             item.name,
-                            style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: Colors.black87),
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 4),
                           Text(
                             'Số lượng: ${item.quantity}',
-                            style: const TextStyle(fontSize: 12, color: Colors.black54),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.black54,
+                            ),
                           ),
                         ],
                       ),
                     ),
                     Text(
                       _formatPrice(item.price * item.quantity),
-                      style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: Colors.black87),
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
                     ),
                   ],
                 ),
@@ -455,7 +539,11 @@ class OrderDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildReceiptBreakdownCard(int subtotal, int deliveryFee, int discount) {
+  Widget _buildReceiptBreakdownCard(
+    int subtotal,
+    int deliveryFee,
+    int discount,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -481,7 +569,11 @@ class OrderDetailPage extends StatelessWidget {
                   color: Colors.blue.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(_getPaymentMethodIcon(order.paymentMethod), color: Colors.blue, size: 18),
+                child: Icon(
+                  _getPaymentMethodIcon(order.paymentMethod),
+                  color: Colors.blue,
+                  size: 18,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -490,12 +582,20 @@ class OrderDetailPage extends StatelessWidget {
                   children: [
                     const Text(
                       'Thanh toán qua',
-                      style: TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       _getPaymentMethodText(order.paymentMethod),
-                      style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: Colors.black87),
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
                     ),
                   ],
                 ),
@@ -505,12 +605,24 @@ class OrderDetailPage extends StatelessWidget {
           const SizedBox(height: 16),
           const Divider(height: 1, thickness: 0.5, color: Colors.black12),
           const SizedBox(height: 16),
-          
-          _buildReceiptRow('Tạm tính', _formatPrice(subtotal), textColor: Colors.black54),
+
+          _buildReceiptRow(
+            'Tạm tính',
+            _formatPrice(subtotal),
+            textColor: Colors.black54,
+          ),
           const SizedBox(height: 10),
-          _buildReceiptRow('Phí giao hàng', _formatPrice(deliveryFee), textColor: Colors.black54),
+          _buildReceiptRow(
+            'Phí giao hàng',
+            _formatPrice(deliveryFee),
+            textColor: Colors.black54,
+          ),
           const SizedBox(height: 10),
-          _buildReceiptRow('Giảm giá ưu đãi', '-${_formatPrice(discount)}', textColor: Colors.green),
+          _buildReceiptRow(
+            'Giảm giá ưu đãi',
+            '-${_formatPrice(discount)}',
+            textColor: Colors.green,
+          ),
           const SizedBox(height: 12),
           const Divider(height: 1, thickness: 0.5, color: Colors.black12),
           const SizedBox(height: 12),
@@ -519,11 +631,19 @@ class OrderDetailPage extends StatelessWidget {
             children: [
               const Text(
                 'Tổng thanh toán',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
               Text(
                 _formatPrice(order.totalPrice),
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.primaryRed),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.primaryRed,
+                ),
               ),
             ],
           ),
@@ -532,17 +652,29 @@ class OrderDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildReceiptRow(String label, String value, {required Color textColor}) {
+  Widget _buildReceiptRow(
+    String label,
+    String value, {
+    required Color textColor,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 13, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
+          style: TextStyle(
+            fontSize: 13,
+            color: Colors.grey.shade600,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         Text(
           value,
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textColor),
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: textColor,
+          ),
         ),
       ],
     );
@@ -550,7 +682,7 @@ class OrderDetailPage extends StatelessWidget {
 
   Widget _buildBottomActionBar(BuildContext context) {
     final bool isActive = order.status != 'Đã giao';
-    
+
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 30),
       decoration: BoxDecoration(
@@ -564,15 +696,18 @@ class OrderDetailPage extends StatelessWidget {
             color: Colors.black.withOpacity(0.05),
             blurRadius: 15,
             offset: const Offset(0, -5),
-          )
+          ),
         ],
       ),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(25),
           gradient: LinearGradient(
-            colors: isActive 
-                ? [const Color(0xFF00B0FF), const Color(0xFF00E676)] // Cyan to Green for tracking active order
+            colors: isActive
+                ? [
+                    const Color(0xFF00B0FF),
+                    const Color(0xFF00E676),
+                  ] // Cyan to Green for tracking active order
                 : [
                     const Color(0xFFFF5722), // Summer Orange
                     const Color(0xFFF22323), // Primary Red
@@ -582,10 +717,11 @@ class OrderDetailPage extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: (isActive ? Colors.green : AppColors.primaryRed).withOpacity(0.3),
+              color: (isActive ? Colors.green : AppColors.primaryRed)
+                  .withOpacity(0.3),
               blurRadius: 8,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
         child: ElevatedButton.icon(

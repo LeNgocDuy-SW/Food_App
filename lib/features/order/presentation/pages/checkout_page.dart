@@ -6,6 +6,7 @@ import '../../../../features/cart/data/cart_manager.dart';
 import '../../../../features/cart/domain/entities/cart_item.dart';
 import '../../data/order_manager.dart';
 import 'payment_success_page.dart';
+import 'package:provider/provider.dart';
 
 class Voucher {
   final String code;
@@ -34,7 +35,8 @@ class CheckoutPage extends StatefulWidget {
 class _CheckoutPageState extends State<CheckoutPage> {
   String _selectedPaymentMethod = 'COD'; // 'BANK', 'MOMO', 'COD'
   Voucher? _appliedVoucher;
-  String _deliveryAddress = 'Số 11 , ngách 21/50/7 Yên Xá, Tân Triều, Thanh Trì, Hà Nội';
+  String _deliveryAddress =
+      'Số 11 , ngách 21/50/7 Yên Xá, Tân Triều, Thanh Trì, Hà Nội';
   String _deliveryNote = '';
 
   @override
@@ -71,7 +73,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   @override
   Widget build(BuildContext context) {
-    final cartItems = CartManager.instance.items;
+    final cartItems = context.read<CartManager>().items;
     final subtotal = cartItems.fold<int>(
       0,
       (sum, item) => sum + (item.price * item.quantity),
@@ -285,15 +287,25 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 Expanded(
                   child: Row(
                     children: [
-                      const Icon(Icons.edit_note_rounded, color: AppColors.primaryRed, size: 20),
+                      const Icon(
+                        Icons.edit_note_rounded,
+                        color: AppColors.primaryRed,
+                        size: 20,
+                      ),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          _deliveryNote.isNotEmpty ? 'Ghi chú: $_deliveryNote' : 'Thêm ghi chú giao hàng...',
+                          _deliveryNote.isNotEmpty
+                              ? 'Ghi chú: $_deliveryNote'
+                              : 'Thêm ghi chú giao hàng...',
                           style: TextStyle(
                             fontSize: 13,
-                            color: _deliveryNote.isNotEmpty ? Colors.black87 : AppColors.primaryRed,
-                            fontWeight: _deliveryNote.isNotEmpty ? FontWeight.normal : FontWeight.bold,
+                            color: _deliveryNote.isNotEmpty
+                                ? Colors.black87
+                                : AppColors.primaryRed,
+                            fontWeight: _deliveryNote.isNotEmpty
+                                ? FontWeight.normal
+                                : FontWeight.bold,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -309,7 +321,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         _deliveryNote = '';
                       });
                     },
-                    child: Icon(Icons.cancel_rounded, color: Colors.grey.shade400, size: 16),
+                    child: Icon(
+                      Icons.cancel_rounded,
+                      color: Colors.grey.shade400,
+                      size: 16,
+                    ),
                   ),
               ],
             ),
@@ -762,7 +778,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
                       // Sao chép danh sách các món ăn trong giỏ hàng để lưu vào lịch sử
                       final itemsCopy = List<CartItem>.from(
-                        CartManager.instance.items,
+                        context.read<CartManager>().items,
                       );
 
                       // Thêm đơn hàng mới vào lịch sử đơn hàng
@@ -780,7 +796,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       );
 
                       // Làm trống giỏ hàng
-                      CartManager.instance.clear();
+                      context.read<CartManager>().clear();
 
                       Navigator.push(
                         context,
@@ -1207,7 +1223,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   void _showAddressDialog() {
-    final TextEditingController addressCtrl = TextEditingController(text: _deliveryAddress);
+    final TextEditingController addressCtrl = TextEditingController(
+      text: _deliveryAddress,
+    );
     final List<String> presetAddresses = [
       'Số 11 , ngách 21/50/7 Yên Xá, Tân Triều, Thanh Trì, Hà Nội (Nhà riêng)',
       'Tòa nhà Keangnam, Phạm Hùng, Mễ Trì, Nam Từ Liêm, Hà Nội (Văn phòng)',
@@ -1218,7 +1236,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           title: const Text(
             'Thay đổi địa chỉ giao hàng',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -1232,7 +1252,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 style: const TextStyle(fontSize: 13),
                 decoration: InputDecoration(
                   hintText: 'Nhập địa chỉ mới...',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -1240,30 +1262,38 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Địa chỉ đã lưu:',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                  ),
                 ),
               ),
               const SizedBox(height: 6),
-              ...presetAddresses.map((addr) => GestureDetector(
-                onTap: () {
-                  addressCtrl.text = addr;
-                },
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 6),
-                  padding: const EdgeInsets.all(8),
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    addr,
-                    style: const TextStyle(fontSize: 11),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              )).toList(),
+              ...presetAddresses
+                  .map(
+                    (addr) => GestureDetector(
+                      onTap: () {
+                        addressCtrl.text = addr;
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 6),
+                        padding: const EdgeInsets.all(8),
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          addr,
+                          style: const TextStyle(fontSize: 11),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(),
             ],
           ),
           actions: [
@@ -1274,7 +1304,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryRed,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               onPressed: () {
                 if (addressCtrl.text.trim().isNotEmpty) {
@@ -1284,7 +1316,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   Navigator.pop(context);
                 }
               },
-              child: const Text('Xác nhận', style: TextStyle(color: Colors.white)),
+              child: const Text(
+                'Xác nhận',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
@@ -1293,7 +1328,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   void _showNoteDialog() {
-    final TextEditingController noteCtrl = TextEditingController(text: _deliveryNote);
+    final TextEditingController noteCtrl = TextEditingController(
+      text: _deliveryNote,
+    );
     final List<String> presetNotes = [
       'Giao hàng không gọi điện (nhắn tin)',
       'Nhiều rau, ít sốt',
@@ -1305,7 +1342,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           title: const Text(
             'Thêm ghi chú giao hàng',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -1320,31 +1359,47 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 style: const TextStyle(fontSize: 13),
                 decoration: InputDecoration(
                   hintText: 'Nhập ghi chú giao hàng...',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
               const Text(
                 'Gợi ý:',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
               ),
               const SizedBox(height: 6),
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
-                children: presetNotes.map((note) => GestureDetector(
-                  onTap: () {
-                    noteCtrl.text = note;
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(note, style: const TextStyle(fontSize: 11)),
-                  ),
-                )).toList(),
+                children: presetNotes
+                    .map(
+                      (note) => GestureDetector(
+                        onTap: () {
+                          noteCtrl.text = note;
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            note,
+                            style: const TextStyle(fontSize: 11),
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
               ),
             ],
           ),
@@ -1356,7 +1411,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryRed,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               onPressed: () {
                 setState(() {

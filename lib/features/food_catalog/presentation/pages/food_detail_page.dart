@@ -5,6 +5,7 @@ import '../../data/favorite_manager.dart';
 import '../../../../features/cart/data/cart_manager.dart';
 import '../../../../features/cart/domain/entities/cart_item.dart';
 import '../../../../features/cart/presentation/pages/cart_page.dart';
+import 'package:provider/provider.dart';
 
 class FoodDetailPage extends StatefulWidget {
   final String title;
@@ -95,7 +96,7 @@ class _FoodDetailPageState extends State<FoodDetailPage> {
   }
 
   void _addToCartDirectly() {
-    CartManager.instance.addItem(
+    context.read<CartManager>().addItem(
       CartItem(
         name: widget.title,
         price: _parsePrice(widget.price),
@@ -771,13 +772,10 @@ class _CartIconButtonState extends State<CartIconButton>
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<List<CartItem>>(
-      valueListenable: CartManager.instance.itemsNotifier,
-      builder: (context, items, child) {
-        final int count = items.fold<int>(
-          0,
-          (sum, item) => sum + item.quantity,
-        );
+    return Consumer<CartManager>(
+      builder: (context, carts, child) {
+        final cart = carts.items;
+        final int count = cart.fold<int>(0, (sum, item) => sum + item.quantity);
 
         if (count > _lastCount) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
