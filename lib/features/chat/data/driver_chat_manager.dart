@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:injectable/injectable.dart';
+import 'package:food_app/injection_container.dart';
 
 class DriverChatMessage {
   final String text;
@@ -12,9 +14,11 @@ class DriverChatMessage {
   });
 }
 
+@lazySingleton
 class DriverChatManager {
-  static final DriverChatManager instance = DriverChatManager._internal();
-  DriverChatManager._internal();
+  static DriverChatManager get instance => getIt<DriverChatManager>();
+
+  DriverChatManager();
 
   final ValueNotifier<List<DriverChatMessage>> messagesNotifier =
       ValueNotifier<List<DriverChatMessage>>([

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widget.dart';
 import '../../../../features/cart/data/cart_manager.dart';
-import '../../../../features/cart/presentation/pages/cart_page.dart';
 import '../../data/order_manager.dart';
-import 'order_tracking_page.dart';
 import 'package:provider/provider.dart';
+import 'package:food_app/core/router/app_router.dart';
 
 class OrderDetailPage extends StatelessWidget {
   final OrderHistoryItem order;
@@ -72,7 +72,7 @@ class OrderDetailPage extends StatelessWidget {
         duration: Duration(seconds: 2),
       ),
     );
-    Navigator.push(context, createRoute(const CartPage()));
+    context.push(AppRouter.cart);
   }
 
   @override
@@ -108,7 +108,7 @@ class OrderDetailPage extends StatelessWidget {
                     Row(
                       children: [
                         GestureDetector(
-                          onTap: () => Navigator.pop(context),
+                          onTap: () => context.pop(),
                           child: Container(
                             padding: const EdgeInsets.all(10),
                             margin: const EdgeInsets.only(right: 16),
@@ -736,9 +736,9 @@ class OrderDetailPage extends StatelessWidget {
           ),
           onPressed: () {
             if (isActive) {
-              Navigator.push(
-                context,
-                createRoute(OrderTrackingPage(order: order)),
+              context.push(
+                AppRouter.orderTracking,
+                extra: order,
               );
             } else {
               _reorder(context);

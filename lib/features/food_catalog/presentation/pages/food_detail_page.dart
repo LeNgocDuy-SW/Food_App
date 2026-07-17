@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/widget.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../data/favorite_manager.dart';
 import '../../../../features/cart/data/cart_manager.dart';
 import '../../../../features/cart/domain/entities/cart_item.dart';
-import '../../../../features/cart/presentation/pages/cart_page.dart';
 import 'package:provider/provider.dart';
+import 'package:food_app/core/router/app_router.dart';
 
 class FoodDetailPage extends StatefulWidget {
   final String title;
@@ -264,7 +265,7 @@ class _BuildAppBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           GestureDetector(
-            onTap: () => Navigator.pop(context),
+            onTap: () => context.pop(),
             child: Container(
               width: 38,
               height: 38,
@@ -790,7 +791,7 @@ class _CartIconButtonState extends State<CartIconButton>
           scale: _scaleAnimation,
           child: GestureDetector(
             onTap: () {
-              Navigator.push(context, createRoute(const CartPage()));
+              context.push(AppRouter.cart);
             },
             child: Stack(
               clipBehavior: Clip.none,

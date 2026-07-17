@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../auth/presentation/pages/login_page.dart';
 import '../../../food_catalog/presentation/pages/food_home_page.dart';
+import 'package:food_app/core/router/app_router.dart';
 
 class LogoutDialog extends StatelessWidget {
   const LogoutDialog({super.key});
@@ -53,13 +54,7 @@ class LogoutDialog extends StatelessWidget {
                   onPressed: () {
                     FoodHomePage.hasShownAd =
                         false; // Reset banner show state for the next session
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const LoginPage(),
-                      ),
-                      (route) => false,
-                    );
+                    context.go(AppRouter.login);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Đã đăng xuất thành công!'),
@@ -86,7 +81,7 @@ class LogoutDialog extends StatelessWidget {
                     elevation: 0,
                   ),
                   onPressed: () {
-                    Navigator.pop(context); // Close dialog
+                    context.pop(); // Close dialog
                   },
                   child: const Text(
                     'Không',

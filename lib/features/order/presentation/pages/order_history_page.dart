@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widget.dart';
 import '../../../../features/cart/data/cart_manager.dart';
-import '../../../../features/cart/presentation/pages/cart_page.dart';
 import '../../data/order_manager.dart';
-import 'order_detail_page.dart';
 import 'package:provider/provider.dart';
+import 'package:food_app/core/router/app_router.dart';
 
 class OrderHistoryPage extends StatefulWidget {
   const OrderHistoryPage({super.key});
@@ -63,7 +63,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
         duration: Duration(seconds: 2),
       ),
     );
-    Navigator.push(context, createRoute(const CartPage()));
+    context.push(AppRouter.cart);
   }
 
   @override
@@ -87,7 +87,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                     Row(
                       children: [
                         GestureDetector(
-                          onTap: () => Navigator.pop(context),
+                          onTap: () => context.pop(),
                           child: Container(
                             padding: const EdgeInsets.all(10),
                             margin: const EdgeInsets.only(right: 16),
@@ -181,10 +181,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                         final order = orders[index];
                         return GestureDetector(
                           onTap: () {
-                            Navigator.push(
-                              context,
-                              createRoute(OrderDetailPage(order: order)),
-                            );
+                            context.push(AppRouter.orderDetail, extra: order);
                           },
                           child: _buildOrderCard(context, order),
                         );

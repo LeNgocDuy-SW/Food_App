@@ -1,11 +1,12 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widget.dart';
 import '../../data/order_manager.dart';
-import 'order_tracking_page.dart';
+import 'package:food_app/core/router/app_router.dart';
 
 class PaymentSuccessPage extends StatefulWidget {
   final int totalPrice;
@@ -190,7 +191,7 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
         children: [
           GestureDetector(
             onTap: () =>
-                Navigator.of(context).popUntil((route) => route.isFirst),
+                context.go(AppRouter.taskbar),
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
@@ -489,9 +490,9 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
                   address: '',
                 ),
               );
-              Navigator.push(
-                context,
-                createRoute(OrderTrackingPage(order: orderItem)),
+              context.push(
+                AppRouter.orderTracking,
+                extra: orderItem,
               );
             },
             icon: const Icon(
@@ -522,7 +523,7 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
             elevation: 0,
           ),
           onPressed: () {
-            Navigator.of(context).popUntil((route) => route.isFirst);
+            context.go(AppRouter.taskbar);
           },
           child: const Text(
             'Quay lại Trang chủ',

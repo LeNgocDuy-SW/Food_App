@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widget.dart';
-import '../../../order/presentation/pages/order_history_page.dart';
-import '../../../profile/presentation/pages/settings_page.dart';
 import '../../../profile/presentation/widgets/logout_dialog.dart';
+import 'package:food_app/core/router/app_router.dart';
 
 class SummerDrawerWidget extends StatelessWidget {
   const SummerDrawerWidget({super.key});
@@ -126,8 +125,8 @@ class SummerDrawerWidget extends StatelessWidget {
                       title: 'Lịch sử đơn hàng',
                       iconColor: Colors.blue,
                       onTap: () {
-                        Navigator.pop(context); // Đóng drawer trước
-                        Navigator.push(context, createRoute(const OrderHistoryPage()));
+                        context.pop(); // Đóng drawer trước
+                        context.push(AppRouter.orderHistory);
                       },
                     ),
                   ],
@@ -145,8 +144,8 @@ class SummerDrawerWidget extends StatelessWidget {
                 title: 'Cài đặt',
                 iconColor: Colors.black54,
                 onTap: () {
-                  Navigator.pop(context); // Đóng drawer trước
-                  Navigator.push(context, createRoute(const SettingsPage()));
+                  context.pop(); // Đóng drawer trước
+                  context.push(AppRouter.settings);
                 },
               ),
               _buildMenuItem(

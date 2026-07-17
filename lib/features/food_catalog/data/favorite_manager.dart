@@ -1,4 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:injectable/injectable.dart';
+import 'package:food_app/injection_container.dart';
 
 class FavoriteMeal {
   final String title;
@@ -20,11 +24,39 @@ class FavoriteMeal {
     this.prepTime = '25-30 phút',
     this.distance = '1.2 km',
   });
+
+  Map<String, dynamic> toJson() => {
+        'title': title,
+        'image': image,
+        'price': price,
+        'rating': rating,
+        'category': category,
+        'storeName': storeName,
+        'prepTime': prepTime,
+        'distance': distance,
+      };
+
+  factory FavoriteMeal.fromJson(Map<String, dynamic> json) => FavoriteMeal(
+        title: json['title'] as String,
+        image: json['image'] as String,
+        price: json['price'] as String,
+        rating: json['rating'] as String,
+        category: json['category'] as String,
+        storeName: json['storeName'] as String? ?? 'Sà Bì Chưởng - Hà Nội',
+        prepTime: json['prepTime'] as String? ?? '25-30 phút',
+        distance: json['distance'] as String? ?? '1.2 km',
+      );
 }
 
+@lazySingleton
 class FavoriteManager {
-  static final FavoriteManager instance = FavoriteManager._internal();
-  FavoriteManager._internal();
+  static const String _favKey = 'cached_favorite_meals';
+
+  static FavoriteManager get instance => getIt<FavoriteManager>();
+
+  FavoriteManager() {
+    _loadFromPrefs();
+  }
 
   final ValueNotifier<List<FavoriteMeal>> favoritesNotifier = ValueNotifier<List<FavoriteMeal>>([
     // Khởi tạo một số món yêu thích mẫu cực kỳ bắt mắt
@@ -48,6 +80,31 @@ class FavoriteManager {
 
   List<FavoriteMeal> get favorites => favoritesNotifier.value;
 
+  Future<void> _loadFromPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final favString = prefs.getString(_favKey);
+      if (favString != null) {
+        final List<dynamic> decoded = jsonDecode(favString);
+        favoritesNotifier.value = decoded
+            .map((x) => FavoriteMeal.fromJson(x as Map<String, dynamic>))
+            .toList();
+      }
+    } catch (e) {
+      debugPrint("Lỗi tải danh sách yêu thích: $e");
+    }
+  }
+
+  Future<void> _saveToPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final favString = jsonEncode(favorites.map((x) => x.toJson()).toList());
+      await prefs.setString(_favKey, favString);
+    } catch (e) {
+      debugPrint("Lỗi lưu danh sách yêu thích: $e");
+    }
+  }
+
   bool isFavorite(String title) {
     return favorites.any((element) => element.title == title);
   }
@@ -61,5 +118,6 @@ class FavoriteManager {
       list.add(meal);
     }
     favoritesNotifier.value = list;
+    _saveToPrefs();
   }
 }

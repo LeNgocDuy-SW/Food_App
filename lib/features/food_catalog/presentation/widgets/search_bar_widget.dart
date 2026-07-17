@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:food_app/features/cart/presentation/pages/cart_page.dart';
+import 'package:go_router/go_router.dart';
 import 'package:food_app/features/cart/data/cart_manager.dart';
-import 'package:food_app/features/cart/domain/entities/cart_item.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widget.dart';
+import 'package:food_app/core/router/app_router.dart';
 import 'package:provider/provider.dart';
 
 class SearchBarWidget extends StatelessWidget {
@@ -142,7 +141,7 @@ class _HomeCartButtonState extends State<HomeCartButton>
           scale: _scaleAnimation,
           child: GestureDetector(
             onTap: () {
-              Navigator.push(context, createRoute(const CartPage()));
+              context.push(AppRouter.cart);
             },
             child: Stack(
               clipBehavior: Clip.none,

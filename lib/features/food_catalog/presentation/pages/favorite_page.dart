@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widget.dart';
-import '../widgets/food_card_widget.dart';
 import '../../data/favorite_manager.dart';
-import 'food_detail_page.dart';
+import 'package:food_app/core/router/app_router.dart';
 
 class FavoritePage extends StatefulWidget {
   final VoidCallback onBack;
@@ -227,17 +227,15 @@ class _FavoritePageState extends State<FavoritePage> {
   Widget _buildFoodCard(FavoriteMeal item) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => FoodDetailPage(
-              title: item.title,
-              image: item.image,
-              price: item.price,
-              rating: item.rating,
-              prepTime: item.prepTime,
-            ),
-          ),
+        context.push(
+          AppRouter.foodDetail,
+          extra: {
+            'title': item.title,
+            'image': item.image,
+            'price': item.price,
+            'rating': item.rating,
+            'prepTime': item.prepTime,
+          },
         );
       },
       child: Container(

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
-import '../../../auth/presentation/pages/login_page.dart';
+import '../../../../core/router/app_router.dart';
 
 class WelcomeButton extends StatelessWidget {
   const WelcomeButton({super.key});
@@ -17,10 +18,7 @@ class WelcomeButton extends StatelessWidget {
         ),
       ),
       onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginPage()),
-        );
+        context.push(AppRouter.login);
       },
       child: const Text(
         "Get Started",

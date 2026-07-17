@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/widget.dart';
 
 class ChatMessage {
@@ -174,7 +175,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       child: Row(
         children: [
           GestureDetector(
-            onTap: () => Navigator.pop(context),
+            onTap: () => context.pop(),
             child: const Icon(Icons.arrow_back, color: Colors.black, size: 28),
           ),
           const SizedBox(width: 12),

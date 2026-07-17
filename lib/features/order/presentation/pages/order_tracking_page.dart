@@ -2,11 +2,12 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widget.dart';
-import '../../../chat/presentation/pages/driver_chat_detail_page.dart';
 import '../../data/order_manager.dart';
+import 'package:food_app/core/router/app_router.dart';
 
 class OrderTrackingPage extends StatefulWidget {
   final OrderHistoryItem order;
@@ -41,7 +42,10 @@ class _OrderTrackingPageState extends State<OrderTrackingPage>
     logs.add('Đơn hàng đã được ghi nhận hệ thống.');
     logs.add('Nhà hàng đã nhận đơn và bắt đầu chuẩn bị món.');
     if (_currentStatus == 'Đang giao' || _currentStatus == 'Đã giao') {
-      logs.insert(0, 'Tài xế Nguyễn Văn Hùng đã nhận đơn hàng và đang di chuyển.');
+      logs.insert(
+        0,
+        'Tài xế Nguyễn Văn Hùng đã nhận đơn hàng và đang di chuyển.',
+      );
     }
     if (_currentStatus == 'Đã giao') {
       logs.insert(0, 'Giao hàng thành công! Hãy thưởng thức món ngon nhé.');
@@ -50,7 +54,9 @@ class _OrderTrackingPageState extends State<OrderTrackingPage>
   }
 
   int getCalculatedRemainingSeconds() {
-    final elapsedReal = DateTime.now().difference(widget.order.orderDate).inSeconds;
+    final elapsedReal = DateTime.now()
+        .difference(widget.order.orderDate)
+        .inSeconds;
     if (elapsedReal < 0) return 1500;
     if (elapsedReal < 12) {
       // 12 real seconds to subtract 360 mock seconds (from 1500 down to 1140)
@@ -67,7 +73,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage>
   @override
   void initState() {
     super.initState();
-    
+
     // Find initial order state from manager
     final currentOrder = OrderManager.instance.orders.firstWhere(
       (o) => o.orderId == widget.order.orderId,
@@ -108,9 +114,13 @@ class _OrderTrackingPageState extends State<OrderTrackingPage>
 
     // Initialize animation state based on current status
     if (_currentStatus == 'Đang giao') {
-      final elapsedReal = DateTime.now().difference(widget.order.orderDate).inSeconds;
+      final elapsedReal = DateTime.now()
+          .difference(widget.order.orderDate)
+          .inSeconds;
       final elapsedInStage2 = elapsedReal - 12;
-      final double initialProgress = elapsedInStage2 > 0 ? (elapsedInStage2 / 16.0) : 0.05;
+      final double initialProgress = elapsedInStage2 > 0
+          ? (elapsedInStage2 / 16.0)
+          : 0.05;
       _driverMovementController.value = initialProgress.clamp(0.05, 0.9);
       _driverMovementController.forward();
     } else if (_currentStatus == 'Đã giao') {
@@ -152,7 +162,9 @@ class _OrderTrackingPageState extends State<OrderTrackingPage>
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('🏍️ Tài xế Nguyễn Văn Hùng đã nhận đơn và đang giao!'),
+            content: Text(
+              '🏍️ Tài xế Nguyễn Văn Hùng đã nhận đơn và đang giao!',
+            ),
             backgroundColor: Colors.blue,
             duration: Duration(seconds: 3),
           ),
@@ -166,7 +178,9 @@ class _OrderTrackingPageState extends State<OrderTrackingPage>
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('🎉 Đơn hàng đã được giao thành công! Chúc bạn ngon miệng!'),
+            content: Text(
+              '🎉 Đơn hàng đã được giao thành công! Chúc bạn ngon miệng!',
+            ),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 3),
           ),
@@ -251,7 +265,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 FloatingActionButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => context.pop(),
                   backgroundColor: Colors.red,
                   child: const Icon(Icons.call_end, color: Colors.white),
                 ),
@@ -292,7 +306,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage>
                         Row(
                           children: [
                             GestureDetector(
-                              onTap: () => Navigator.pop(context),
+                              onTap: () => context.pop(),
                               child: Container(
                                 padding: const EdgeInsets.all(10),
                                 margin: const EdgeInsets.only(right: 16),
@@ -484,7 +498,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage>
     return Container(
       height: 200,
       decoration: BoxDecoration(
-        color: const Color(0xFFE0F2F1), // Summer light cyan/teal background
+        color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -497,148 +511,239 @@ class _OrderTrackingPageState extends State<OrderTrackingPage>
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
-        child: Stack(
-          children: [
-            // Summer decorations: Sun & Palms
-            Positioned(
-              top: 15,
-              right: 15,
-              child: const Text('☀️', style: TextStyle(fontSize: 32)),
-            ),
-            Positioned(
-              bottom: 10,
-              left: 10,
-              child: const Text('🌴', style: TextStyle(fontSize: 36)),
-            ),
-            Positioned(
-              bottom: 40,
-              right: 20,
-              child: const Text('🌴', style: TextStyle(fontSize: 36)),
-            ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final size = Size(constraints.maxWidth, constraints.maxHeight);
 
-            // Map Road dashed line
-            Center(
-              child: CustomPaint(
-                size: const Size(double.infinity, 200),
-                painter: _MapRoadPainter(),
-              ),
-            ),
+            // Normalized path points (0.0 to 1.0)
+            final List<Offset> points = const [
+              Offset(0.15, 0.72),
+              Offset(0.32, 0.38),
+              Offset(0.48, 0.58),
+              Offset(0.68, 0.32),
+              Offset(0.85, 0.52),
+            ];
 
-            // Restaurant location pin
-            Positioned(
-              left: 20,
-              top: 80,
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: const BoxDecoration(
-                      color: Colors.green,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 4,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.store_rounded,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Nhà hàng 🍳',
-                    style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black54,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // User Home location pin
-            Positioned(
-              right: 20,
-              top: 80,
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: const BoxDecoration(
-                      color: AppColors.primaryRed,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 4,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.home_rounded,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Bạn 🏠',
-                    style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black54,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Driver motorcycle moving along path
-            AnimatedBuilder(
-              animation: _driverPositionAnimation,
-              builder: (context, child) {
-                double t = _driverPositionAnimation.value;
-                // Calculate position along curve (S-shape curve)
-                // x goes from left (pin is at x=40) to right (pin is at width-40)
-                // y is around 100 with sinusoidal wave
-                double x = 40 + t * (MediaQuery.of(context).size.width - 140);
-                double y = 100 + 40 * math.sin(t * math.pi);
-
-                // If status is still preparing, motorbike stays at restaurant (t=0.05)
-                if (_currentStatus == 'Đang chuẩn bị') {
-                  x = 40;
-                  y = 100;
-                }
-
-                return Positioned(
-                  left: x,
-                  top: y - 20,
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 6,
-                          offset: Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: const Text('🏍️', style: TextStyle(fontSize: 22)),
-                  ),
+            Offset getPositionOnPath(double t) {
+              if (t <= 0)
+                return Offset(
+                  points.first.dx * size.width,
+                  points.first.dy * size.height,
                 );
-              },
-            ),
-          ],
+              if (t >= 1)
+                return Offset(
+                  points.last.dx * size.width,
+                  points.last.dy * size.height,
+                );
+
+              double segmentLength = 1.0 / (points.length - 1);
+              int index = (t / segmentLength).floor();
+              if (index >= points.length - 1) {
+                return Offset(
+                  points.last.dx * size.width,
+                  points.last.dy * size.height,
+                );
+              }
+
+              double localT = (t - index * segmentLength) / segmentLength;
+              Offset p0 = points[index];
+              Offset p1 = points[index + 1];
+
+              double x = p0.dx + (p1.dx - p0.dx) * localT;
+              double y = p0.dy + (p1.dy - p0.dy) * localT;
+
+              return Offset(x * size.width, y * size.height);
+            }
+
+            double getAngleOnPath(double t) {
+              if (t >= 0.98) t = 0.98;
+              Offset pos1 = getPositionOnPath(t);
+              Offset pos2 = getPositionOnPath(t + 0.02);
+              return math.atan2(pos2.dy - pos1.dy, pos2.dx - pos1.dx);
+            }
+
+            return Stack(
+              children: [
+                // Real Static Map Background centered on Yen Xa, Hanoi
+                Image.network(
+                  'https://static-maps.yandex.ru/1.x/?ll=105.795817,20.974057&z=15&size=600,200&l=map',
+                  width: double.infinity,
+                  height: 200,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Container(
+                      color: const Color(0xFFE8F5E9),
+                      child: const Center(
+                        child: CircularProgressIndicator(color: Colors.teal),
+                      ),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: const Color(0xFFE8F5E9),
+                      child: const Center(
+                        child: Icon(
+                          Icons.map_outlined,
+                          color: Colors.teal,
+                          size: 40,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
+                // Subtle transparent overlay for map branding blending
+                Container(color: Colors.white.withOpacity(0.12)),
+
+                // GPS Route Line Painter
+                CustomPaint(
+                  size: size,
+                  painter: _RoutePainter(
+                    points: points,
+                    routeColor: statusColor,
+                    progress: _currentStatus == 'Đang chuẩn bị'
+                        ? 0.0
+                        : _driverPositionAnimation.value,
+                  ),
+                ),
+
+                // Restaurant Pin
+                Positioned(
+                  left: points.first.dx * size.width - 20,
+                  top: points.first.dy * size.height - 40,
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(
+                          color: Colors.green,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 4,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.store_rounded,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'Nhà hàng',
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // User Home Pin
+                Positioned(
+                  left: points.last.dx * size.width - 20,
+                  top: points.last.dy * size.height - 40,
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(
+                          color: AppColors.primaryRed,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 4,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.home_rounded,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'Bạn',
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Driver motorcycle moving along path with dynamic rotation
+                AnimatedBuilder(
+                  animation: _driverPositionAnimation,
+                  builder: (context, child) {
+                    double t = _currentStatus == 'Đang chuẩn bị'
+                        ? 0.0
+                        : _driverPositionAnimation.value;
+                    Offset pos = getPositionOnPath(t);
+                    double angle = getAngleOnPath(t);
+
+                    return Positioned(
+                      left: pos.dx - 18,
+                      top: pos.dy - 18,
+                      child: Transform.rotate(
+                        angle: angle,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black38,
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Text(
+                            '🏍️',
+                            style: TextStyle(fontSize: 18),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -762,10 +867,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage>
                     minimumSize: const Size(0, 40),
                   ),
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      createRoute(const DriverChatDetailPage()),
-                    );
+                    context.push(AppRouter.driverChatDetail);
                   },
                   icon: const Icon(Icons.chat_bubble_rounded, size: 16),
                   label: const Text(
@@ -926,7 +1028,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage>
             elevation: 0,
           ),
           onPressed: () {
-            Navigator.of(context).popUntil((route) => route.isFirst);
+            context.go(AppRouter.taskbar);
           },
           child: const Text(
             'Quay lại Trang chủ',
@@ -942,33 +1044,77 @@ class _OrderTrackingPageState extends State<OrderTrackingPage>
   }
 }
 
-class _MapRoadPainter extends CustomPainter {
+class _RoutePainter extends CustomPainter {
+  final List<Offset> points;
+  final Color routeColor;
+  final double progress;
+
+  _RoutePainter({
+    required this.points,
+    required this.routeColor,
+    required this.progress,
+  });
+
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withOpacity(0.6)
-      ..strokeWidth = 4
-      ..style = PaintingStyle.stroke;
+    if (points.length < 2) return;
 
-    final path = Path();
-    // Start from left (restaurant) to right (user) with sinusoidal road wave
-    path.moveTo(40, 100);
-    path.quadraticBezierTo(size.width / 2, 180, size.width - 40, 100);
+    // Draw the background route path (semi-transparent grey)
+    final bgPaint = Paint()
+      ..color = Colors.grey.withOpacity(0.4)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5
+      ..strokeCap = StrokeCap.round;
 
-    // Draw solid white road border
-    canvas.drawPath(path, paint);
+    final bgPath = Path();
+    bgPath.moveTo(points[0].dx * size.width, points[0].dy * size.height);
+    for (int i = 1; i < points.length; i++) {
+      bgPath.lineTo(points[i].dx * size.width, points[i].dy * size.height);
+    }
+    canvas.drawPath(bgPath, bgPaint);
 
-    // Draw dashed road center line
-    final dashPaint = Paint()
-      ..color = Colors.amber.shade700
-      ..strokeWidth = 1.5
-      ..style = PaintingStyle.stroke;
+    // Draw the active completed route path (solid color)
+    if (progress > 0) {
+      final activePaint = Paint()
+        ..color = routeColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 5
+        ..strokeCap = StrokeCap.round;
 
-    canvas.drawPath(path, dashPaint);
+      final activePath = Path();
+      activePath.moveTo(points[0].dx * size.width, points[0].dy * size.height);
+
+      for (double t = 0.0; t <= progress; t += 0.01) {
+        Offset pos = _getPosition(t, size);
+        activePath.lineTo(pos.dx, pos.dy);
+      }
+      Offset finalPos = _getPosition(progress, size);
+      activePath.lineTo(finalPos.dx, finalPos.dy);
+
+      canvas.drawPath(activePath, activePaint);
+    }
+  }
+
+  Offset _getPosition(double t, Size size) {
+    double segmentLength = 1.0 / (points.length - 1);
+    int index = (t / segmentLength).floor();
+    if (index >= points.length - 1) {
+      return Offset(points.last.dx * size.width, points.last.dy * size.height);
+    }
+    double localT = (t - index * segmentLength) / segmentLength;
+    Offset p0 = points[index];
+    Offset p1 = points[index + 1];
+    return Offset(
+      (p0.dx + (p1.dx - p0.dx) * localT) * size.width,
+      (p0.dy + (p1.dy - p0.dy) * localT) * size.height,
+    );
   }
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _RoutePainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.routeColor != routeColor;
+  }
 }
 
 class _ConfettiParticle {

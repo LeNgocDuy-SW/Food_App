@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:food_app/features/auth/presentation/widgets/login_with.dart';
-import '../../../../core/widget.dart';
-import '../../../../core/constants/app_sizes.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/summer_animated_background.dart';
-import '../widgets/sign_up_textfield.dart';
 import '../widgets/login_button.dart';
-import 'login_page.dart';
-import 'confirm_password_page.dart';
+import 'package:food_app/core/router/app_router.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({super.key});
@@ -17,8 +13,18 @@ class ChangePasswordPage extends StatefulWidget {
 }
 
 class _ChangePasswordPageState extends State<ChangePasswordPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _newPasswordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   bool _obscureNewPassword = true;
   bool _obscureConfirmPassword = true;
+
+  @override
+  void dispose() {
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +43,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           GestureDetector(
-                            onTap: () => Navigator.pop(context),
+                            onTap: () => context.pop(),
                             child: const Icon(
                               Icons.chevron_left_outlined,
                               size: 35,
@@ -50,145 +56,169 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 28,
                               ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Change Password',
-                                    style: TextStyle(
-                                      fontSize: 32,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 22),
-                                  TextField(
-                                    obscureText: _obscureNewPassword,
-                                    style: const TextStyle(color: Colors.black),
-                                    decoration: InputDecoration(
-                                      hintText: 'New Password',
-                                      filled: true,
-                                      fillColor: AppColors.white,
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                            horizontal: 24,
-                                            vertical: 16,
-                                          ),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(20),
+                              child: Form(
+                                key: _formKey,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Change Password',
+                                      style: TextStyle(
+                                        fontSize: 32,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
                                       ),
-                                      suffixIcon: Padding(
-                                        padding: const EdgeInsets.only(
-                                          right: 12,
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.end,
-                                          children: [
-                                            IconButton(
-                                              icon: AnimatedSwitcher(
-                                                duration: const Duration(
-                                                  milliseconds: 200,
-                                                ),
-                                                transitionBuilder:
-                                                    (child, animation) =>
-                                                        ScaleTransition(
-                                                          scale: animation,
-                                                          child: child,
-                                                        ),
-                                                child: Icon(
-                                                  _obscureNewPassword
-                                                      ? Icons.visibility_off
-                                                      : Icons.visibility,
-                                                  key: ValueKey<bool>(
-                                                    _obscureNewPassword,
-                                                  ),
-                                                  color: Colors.grey,
-                                                ),
-                                              ),
-                                              onPressed: () {
-                                                setState(() {
-                                                  _obscureNewPassword =
-                                                      !_obscureNewPassword;
-                                                });
-                                              },
+                                    ),
+                                    const SizedBox(height: 22),
+                                    TextFormField(
+                                      controller: _newPasswordController,
+                                      obscureText: _obscureNewPassword,
+                                      style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return 'Vui lòng nhập mật khẩu mới';
+                                        }
+                                        if (value.length < 6) {
+                                          return 'Mật khẩu phải từ 6 ký tự trở lên';
+                                        }
+                                        return null;
+                                      },
+                                      decoration: InputDecoration(
+                                        hintText: 'New Password',
+                                        filled: true,
+                                        fillColor: AppColors.white,
+                                        errorStyle: const TextStyle(color: Colors.yellowAccent, fontWeight: FontWeight.bold),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 24,
+                                              vertical: 16,
                                             ),
-                                          ],
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(20),
                                         ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 22),
-                                  TextField(
-                                    obscureText: _obscureConfirmPassword,
-                                    style: const TextStyle(color: Colors.black),
-                                    decoration: InputDecoration(
-                                      hintText: 'Confirm Password',
-                                      filled: true,
-                                      fillColor: AppColors.white,
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                            horizontal: 24,
-                                            vertical: 16,
+                                        suffixIcon: Padding(
+                                          padding: const EdgeInsets.only(
+                                            right: 12,
                                           ),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      suffixIcon: Padding(
-                                        padding: const EdgeInsets.only(
-                                          right: 12,
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.end,
-                                          children: [
-                                            IconButton(
-                                              icon: AnimatedSwitcher(
-                                                duration: const Duration(
-                                                  milliseconds: 200,
-                                                ),
-                                                transitionBuilder:
-                                                    (child, animation) =>
-                                                        ScaleTransition(
-                                                          scale: animation,
-                                                          child: child,
-                                                        ),
-                                                child: Icon(
-                                                  _obscureConfirmPassword
-                                                      ? Icons.visibility_off
-                                                      : Icons.visibility,
-                                                  key: ValueKey<bool>(
-                                                    _obscureConfirmPassword,
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
+                                            children: [
+                                              IconButton(
+                                                icon: AnimatedSwitcher(
+                                                  duration: const Duration(
+                                                    milliseconds: 200,
                                                   ),
-                                                  color: Colors.grey,
+                                                  transitionBuilder:
+                                                      (child, animation) =>
+                                                          ScaleTransition(
+                                                            scale: animation,
+                                                            child: child,
+                                                          ),
+                                                  child: Icon(
+                                                    _obscureNewPassword
+                                                        ? Icons.visibility_off
+                                                        : Icons.visibility,
+                                                    key: ValueKey<bool>(
+                                                      _obscureNewPassword,
+                                                    ),
+                                                    color: Colors.grey,
+                                                  ),
                                                 ),
+                                                onPressed: () {
+                                                  setState(() {
+                                                    _obscureNewPassword =
+                                                        !_obscureNewPassword;
+                                                  });
+                                                },
                                               ),
-                                              onPressed: () {
-                                                setState(() {
-                                                  _obscureConfirmPassword =
-                                                      !_obscureConfirmPassword;
-                                                });
-                                              },
-                                            ),
-                                          ],
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 35),
-                                  LoginButton(
-                                    title: 'Change Password',
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        createRoute(const LoginPage()),
-                                      );
-                                    },
-                                  ),
-                                ],
+                                    const SizedBox(height: 22),
+                                    TextFormField(
+                                      controller: _confirmPasswordController,
+                                      obscureText: _obscureConfirmPassword,
+                                      style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return 'Vui lòng xác nhận mật khẩu';
+                                        }
+                                        if (value != _newPasswordController.text) {
+                                          return 'Mật khẩu xác nhận không trùng khớp';
+                                        }
+                                        return null;
+                                      },
+                                      decoration: InputDecoration(
+                                        hintText: 'Confirm Password',
+                                        filled: true,
+                                        fillColor: AppColors.white,
+                                        errorStyle: const TextStyle(color: Colors.yellowAccent, fontWeight: FontWeight.bold),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 24,
+                                              vertical: 16,
+                                            ),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                        suffixIcon: Padding(
+                                          padding: const EdgeInsets.only(
+                                            right: 12,
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
+                                            children: [
+                                              IconButton(
+                                                icon: AnimatedSwitcher(
+                                                  duration: const Duration(
+                                                    milliseconds: 200,
+                                                  ),
+                                                  transitionBuilder:
+                                                      (child, animation) =>
+                                                          ScaleTransition(
+                                                            scale: animation,
+                                                            child: child,
+                                                          ),
+                                                  child: Icon(
+                                                    _obscureConfirmPassword
+                                                        ? Icons.visibility_off
+                                                        : Icons.visibility,
+                                                    key: ValueKey<bool>(
+                                                      _obscureConfirmPassword,
+                                                    ),
+                                                    color: Colors.grey,
+                                                  ),
+                                                ),
+                                                onPressed: () {
+                                                  setState(() {
+                                                    _obscureConfirmPassword =
+                                                        !_obscureConfirmPassword;
+                                                  });
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 35),
+                                    LoginButton(
+                                      title: 'Change Password',
+                                      onPressed: () {
+                                        if (_formKey.currentState!.validate()) {
+                                          context.push(AppRouter.login);
+                                        }
+                                      },
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),

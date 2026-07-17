@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widget.dart';
 import '../../data/driver_chat_manager.dart';
@@ -107,7 +108,7 @@ class _DriverChatDetailPageState extends State<DriverChatDetailPage> {
       child: Row(
         children: [
           GestureDetector(
-            onTap: () => Navigator.pop(context),
+            onTap: () => context.pop(),
             child: const Icon(Icons.arrow_back_ios_new, color: Colors.black87, size: 22),
           ),
           const SizedBox(width: 12),

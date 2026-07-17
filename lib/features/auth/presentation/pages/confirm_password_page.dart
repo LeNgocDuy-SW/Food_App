@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:food_app/features/auth/presentation/widgets/login_with.dart';
-import '../../../../core/widget.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_sizes.dart';
-import '../../../../core/constants/app_colors.dart';
 import '../../../../core/summer_animated_background.dart';
-import '../widgets/sign_up_textfield.dart';
 import '../widgets/login_button.dart';
-import 'login_page.dart';
 import '../widgets/confirm_pin.dart';
-import 'change_password.dart';
+import 'package:food_app/core/router/app_router.dart';
 
 class ConfirmPassWordPage extends StatefulWidget {
   const ConfirmPassWordPage({super.key});
@@ -52,7 +48,7 @@ class _ConfirmPassWordPageState extends State<ConfirmPassWordPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           GestureDetector(
-                            onTap: () => Navigator.pop(context),
+                            onTap: () => context.pop(),
                             child: const Icon(
                               Icons.chevron_left_outlined,
                               size: 35,
@@ -100,10 +96,7 @@ class _ConfirmPassWordPageState extends State<ConfirmPassWordPage> {
                                     onPressed: () {
                                       String pin = getFullPin();
                                       print(pin);
-                                      Navigator.push(
-                                        context,
-                                        createRoute(const ChangePasswordPage()),
-                                      );
+                                      context.push(AppRouter.changePassword);
                                     },
                                   ),
                                 ],

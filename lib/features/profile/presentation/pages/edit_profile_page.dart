@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/widget.dart';
 import '../widgets/logout_dialog.dart';
 
@@ -19,7 +20,7 @@ class EditProfilePage extends StatelessWidget {
                 child: Row(
                   children: [
                     GestureDetector(
-                      onTap: () => Navigator.pop(context),
+                      onTap: () => context.pop(),
                       child: const Icon(
                         Icons.arrow_back,
                         color: Colors.black,

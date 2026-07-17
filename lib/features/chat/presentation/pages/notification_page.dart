@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widget.dart';
 import '../../data/driver_chat_manager.dart';
-import 'chat_detail_page.dart';
-import 'driver_chat_detail_page.dart';
+import 'package:food_app/core/router/app_router.dart';
 
 class NotificationPage extends StatelessWidget {
   final bool showBackButton;
@@ -33,7 +33,7 @@ class NotificationPage extends StatelessWidget {
                       children: [
                         if (showBackButton)
                           GestureDetector(
-                            onTap: () => Navigator.pop(context),
+                            onTap: () => context.pop(),
                             child: Container(
                               padding: const EdgeInsets.all(10),
                               margin: const EdgeInsets.only(right: 16),
@@ -241,9 +241,9 @@ class NotificationPage extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         if (isDriverChat) {
-          Navigator.push(context, createRoute(const DriverChatDetailPage()));
+          context.push(AppRouter.driverChatDetail);
         } else if (isChat) {
-          Navigator.push(context, createRoute(const ChatDetailPage()));
+          context.push(AppRouter.chatDetail);
         }
       },
       child: Container(

@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/widget.dart';
 import '../../../food_catalog/presentation/widgets/food_card_widget.dart';
-import '../../../cart/presentation/pages/cart_page.dart';
-import '../../../../features/chat/presentation/pages/notification_page.dart';
 import '../../../order/data/order_manager.dart';
-import '../../../order/presentation/pages/order_tracking_page.dart';
-import 'settings_page.dart';
+import 'package:food_app/core/router/app_router.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -151,22 +149,19 @@ class ProfilePage extends StatelessWidget {
                   _buildHeaderIconButton(
                     context,
                     Icons.settings_rounded,
-                    () => Navigator.push(context, createRoute(const SettingsPage())),
+                    () => context.push(AppRouter.settings),
                   ),
                   const SizedBox(width: 8),
                   _buildHeaderIconButton(
                     context,
                     Icons.shopping_cart_rounded,
-                    () => Navigator.push(context, createRoute(const CartPage())),
+                    () => context.push(AppRouter.cart),
                   ),
                   const SizedBox(width: 8),
                   _buildHeaderIconButton(
                     context,
                     Icons.notifications_rounded,
-                    () => Navigator.push(
-                      context,
-                      createRoute(const NotificationPage(showBackButton: true)),
-                    ),
+                    () => context.push(AppRouter.notifications, extra: true),
                   ),
                 ],
               ),
@@ -367,7 +362,7 @@ class ProfilePage extends StatelessWidget {
                         minimumSize: const Size(0, 32),
                       ),
                       onPressed: () {
-                        Navigator.push(context, createRoute(OrderTrackingPage(order: activeOrder)));
+                        context.push(AppRouter.orderTracking, extra: activeOrder);
                       },
                       child: const Text(
                         'Theo dõi',

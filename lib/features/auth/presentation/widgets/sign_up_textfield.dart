@@ -4,11 +4,15 @@ import 'package:food_app/core/constants/app_colors.dart';
 class SignUpTextField extends StatefulWidget {
   final String hintText;
   final bool isPassword;
+  final TextEditingController? controller;
+  final String? Function(String?)? validator;
 
   const SignUpTextField({
     super.key,
     required this.hintText,
     this.isPassword = false,
+    this.controller,
+    this.validator,
   });
 
   @override
@@ -20,13 +24,16 @@ class _SignUpTextFieldState extends State<SignUpTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    return TextFormField(
+      controller: widget.controller,
       obscureText: widget.isPassword ? _obscureText : false,
-      style: const TextStyle(color: Colors.black),
+      style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+      validator: widget.validator,
       decoration: InputDecoration(
         hintText: widget.hintText,
         filled: true,
         fillColor: AppColors.white,
+        errorStyle: const TextStyle(color: Colors.yellowAccent, fontWeight: FontWeight.bold),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 24,
           vertical: 16,

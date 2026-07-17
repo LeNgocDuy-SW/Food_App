@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widget.dart';
 import '../widgets/banner_widget.dart';
@@ -746,7 +747,7 @@ class _FoodHomePageState extends State<FoodHomePage> {
                         elevation: 0,
                       ),
                       onPressed: () {
-                        Navigator.pop(context);
+                        context.pop();
                         ScaffoldMessenger.of(context).clearSnackBars();
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
@@ -790,7 +791,7 @@ class _FoodHomePageState extends State<FoodHomePage> {
                 top: -12,
                 right: -12,
                 child: GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () => context.pop(),
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: const BoxDecoration(

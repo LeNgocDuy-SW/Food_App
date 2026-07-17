@@ -1,12 +1,13 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widget.dart';
 import '../../../../features/cart/data/cart_manager.dart';
 import '../../../../features/cart/domain/entities/cart_item.dart';
 import '../../data/order_manager.dart';
-import 'payment_success_page.dart';
 import 'package:provider/provider.dart';
+import 'package:food_app/core/router/app_router.dart';
 
 class Voucher {
   final String code;
@@ -115,7 +116,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     Row(
                       children: [
                         GestureDetector(
-                          onTap: () => Navigator.pop(context),
+                          onTap: () => context.pop(),
                           child: Container(
                             padding: const EdgeInsets.all(10),
                             margin: const EdgeInsets.only(right: 16),
@@ -798,15 +799,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       // Làm trống giỏ hàng
                       context.read<CartManager>().clear();
 
-                      Navigator.push(
-                        context,
-                        createRoute(
-                          PaymentSuccessPage(
-                            totalPrice: currentTotal,
-                            paymentMethod: currentMethod,
-                            orderId: orderId,
-                          ),
-                        ),
+                      context.push(
+                        AppRouter.paymentSuccess,
+                        extra: {
+                          'totalPrice': currentTotal,
+                          'paymentMethod': currentMethod,
+                          'orderId': orderId,
+                        },
                       );
                     },
               child: Row(

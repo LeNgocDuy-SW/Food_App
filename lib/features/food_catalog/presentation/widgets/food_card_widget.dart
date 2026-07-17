@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:food_app/core/constants/app_colors.dart';
 import '../../data/favorite_manager.dart';
-import '../pages/food_detail_page.dart';
+import 'package:food_app/core/router/app_router.dart';
 
 class FoodCardWidget extends StatefulWidget {
   final String title;
@@ -34,16 +35,15 @@ class _FoodCardWidgetState extends State<FoodCardWidget> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: widget.onTap ??
-          () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => FoodDetailPage(
-                    title: widget.title,
-                    image: widget.image,
-                    price: widget.price,
-                    rating: widget.rating,
-                  ),
-                ),
+          () => context.push(
+                AppRouter.foodDetail,
+                extra: {
+                  'title': widget.title,
+                  'image': widget.image,
+                  'price': widget.price,
+                  'rating': widget.rating,
+                  'prepTime': null,
+                },
               ),
       child: Container(
         width: 160,

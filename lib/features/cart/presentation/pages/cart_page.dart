@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:food_app/features/order/presentation/pages/checkout_page.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widget.dart';
 import '../../domain/entities/cart_item.dart';
 import '../../data/cart_manager.dart';
 import 'package:provider/provider.dart';
+import 'package:food_app/core/router/app_router.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -64,7 +66,7 @@ class _CartPageState extends State<CartPage> {
                     Row(
                       children: [
                         GestureDetector(
-                          onTap: () => Navigator.pop(context),
+                          onTap: () => context.pop(),
                           child: Container(
                             padding: const EdgeInsets.all(10),
                             margin: const EdgeInsets.only(right: 16),
@@ -509,11 +511,9 @@ class _CartPageState extends State<CartPage> {
                   ),
                   onPressed: () {
                     if (cartItem.isEmpty) return;
-                    Navigator.push(
-                      context,
-                      createRoute(
-                        CheckoutPage(initialVoucher: _appliedVoucher),
-                      ),
+                    context.push(
+                      AppRouter.checkout,
+                      extra: _appliedVoucher,
                     );
                   },
                   child: Row(

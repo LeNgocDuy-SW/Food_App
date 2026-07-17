@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/widget.dart';
-import 'edit_profile_page.dart';
 import '../widgets/logout_dialog.dart';
+import 'package:food_app/core/router/app_router.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -23,7 +24,7 @@ class SettingsPage extends StatelessWidget {
                 child: Row(
                   children: [
                     GestureDetector(
-                      onTap: () => Navigator.pop(context),
+                      onTap: () => context.pop(),
                       child: const Icon(
                         Icons.arrow_back,
                         color: Colors.black,
@@ -80,10 +81,7 @@ class SettingsPage extends StatelessWidget {
                               context,
                               'Tài khoản & Bảo mật',
                               onTap: () {
-                                Navigator.push(
-                                  context,
-                                  createRoute(const EditProfilePage()),
-                                );
+                                context.push(AppRouter.editProfile);
                               },
                             ),
                             _buildSettingsItem(context, 'Địa chỉ'),
