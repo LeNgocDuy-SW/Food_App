@@ -70,9 +70,19 @@ class _OrderTrackingPageState extends State<OrderTrackingPage>
     }
   }
 
+  Timer? _backendSyncTimer;
+
   @override
   void initState() {
     super.initState();
+
+    // Đồng bộ ngay từ Backend API
+    OrderManager.instance.fetchOrdersFromBackend();
+    _backendSyncTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (mounted) {
+        OrderManager.instance.fetchOrdersFromBackend();
+      }
+    });
 
     // Find initial order state from manager
     final currentOrder = OrderManager.instance.orders.firstWhere(
@@ -132,6 +142,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage>
 
   @override
   void dispose() {
+    _backendSyncTimer?.cancel();
     OrderManager.instance.ordersNotifier.removeListener(_onOrdersChanged);
     _countdownTimer?.cancel();
     _driverMovementController.dispose();
@@ -564,9 +575,10 @@ class _OrderTrackingPageState extends State<OrderTrackingPage>
 
             return Stack(
               children: [
-                // Real Static Map Background centered on Yen Xa, Hanoi
+                // Real Clean Voyager Street Map Tile Background (Hanoi Region)
                 Image.network(
-                  'https://static-maps.yandex.ru/1.x/?ll=105.795817,20.974057&z=15&size=600,200&l=map',
+                  'https://basemaps.cartocdn.com/rastertiles/voyager/15/25996/14197.png',
+                  headers: const {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'},
                   width: double.infinity,
                   height: 200,
                   fit: BoxFit.cover,
@@ -580,17 +592,50 @@ class _OrderTrackingPageState extends State<OrderTrackingPage>
                     );
                   },
                   errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: const Color(0xFFE8F5E9),
-                      child: const Center(
-                        child: Icon(
-                          Icons.map_outlined,
-                          color: Colors.teal,
-                          size: 40,
+                    return Image.network(
+                      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/15/14197/25996',
+                      width: double.infinity,
+                      height: 200,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        color: const Color(0xFFE8F5E9),
+                        child: const Center(
+                          child: Icon(
+                            Icons.map_outlined,
+                            color: Colors.teal,
+                            size: 40,
+                          ),
                         ),
                       ),
                     );
                   },
+                ),
+
+                // Real Location Badge Tag
+                Positioned(
+                  top: 10,
+                  left: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.75),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: const [
+                        Icon(Icons.my_location_rounded, color: Colors.lightGreenAccent, size: 14),
+                        SizedBox(width: 6),
+                        Text(
+                          '🗺️ Bản đồ thực tế: Yên Xá, Thanh Trì, Hà Nội',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
 
                 // Subtle transparent overlay for map branding blending

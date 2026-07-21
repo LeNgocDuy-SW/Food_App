@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Optional
 
 # 1. Schema dữ liệu gửi lên khi ĐĂNG KÝ
 class UserCreate(BaseModel):
@@ -27,3 +28,23 @@ class UserOut(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+# 5. Schemas cho Quên mật khẩu & OTP
+class ForgotPasswordRequest(BaseModel):
+    phone_or_email: str
+
+class VerifyOTPRequest(BaseModel):
+    phone_or_email: str
+    otp_code: str
+
+class ResetPasswordRequest(BaseModel):
+    phone_or_email: str
+    otp_code: str
+    new_password: str
+
+# 6. Schema Cập nhật thông tin Hồ sơ
+class UserUpdateProfile(BaseModel):
+    full_name: Optional[str] = None
+    email: Optional[str] = None
+
+

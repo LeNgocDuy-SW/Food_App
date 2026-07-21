@@ -2,9 +2,164 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/widget.dart';
 import '../widgets/logout_dialog.dart';
+import 'package:food_app/core/services/auth_service.dart';
 
-class EditProfilePage extends StatelessWidget {
+class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
+
+  @override
+  State<EditProfilePage> createState() => _EditProfilePageState();
+}
+
+class _EditProfilePageState extends State<EditProfilePage> {
+  String _name = 'Đang tải...';
+  String _emailOrPhone = 'Đang tải...';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    final result = await AuthService.getCurrentUser();
+    if (!mounted) return;
+
+    if (result['success'] == true && result['data'] != null) {
+      final data = result['data'];
+      setState(() {
+        _name = data['full_name'] ?? 'Chưa thiết lập';
+        _emailOrPhone = data['email'] ?? 'Chưa thiết lập';
+      });
+    }
+  }
+
+  Future<void> _showEditDialog({
+    required String title,
+    required String initialValue,
+    required Function(String newValue) onSave,
+  }) async {
+    final controller = TextEditingController(text: initialValue);
+    final formKey = GlobalKey<FormState>();
+
+    await showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Text(
+          'Chỉnh sửa $title',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: controller,
+            autofocus: true,
+            decoration: InputDecoration(
+              labelText: 'Nhập $title mới',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            validator: (val) {
+              if (val == null || val.trim().isEmpty) {
+                return 'Vui lòng không để trống';
+              }
+              return null;
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.deepOrange,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: () async {
+              if (formKey.currentState!.validate()) {
+                final newValue = controller.text.trim();
+                Navigator.of(dialogContext).pop();
+                await onSave(newValue);
+              }
+            },
+            child: const Text('Lưu', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _updateName(String newName) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    final result = await AuthService.updateProfile(fullName: newName);
+
+    if (!mounted) return;
+    Navigator.pop(context);
+
+    if (result['success'] == true) {
+      setState(() {
+        _name = newName;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đã cập nhật tên thành công!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Cập nhật thất bại!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _updateEmailOrPhone(String newEmailOrPhone) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    final result = await AuthService.updateProfile(email: newEmailOrPhone);
+
+    if (!mounted) return;
+    Navigator.pop(context);
+
+    if (result['success'] == true) {
+      setState(() {
+        _emailOrPhone = newEmailOrPhone;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đã cập nhật Email/SĐT thành công!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Cập nhật thất bại!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +237,7 @@ class EditProfilePage extends StatelessWidget {
                                 Icon(Icons.edit_square, size: 18, color: Colors.black87),
                                 SizedBox(width: 6),
                                 Text(
-                                  'Sửa',
+                                  'Sửa ảnh',
                                   style: TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w500,
@@ -93,14 +248,27 @@ class EditProfilePage extends StatelessWidget {
                             ),
                             const SizedBox(height: 24),
                             // Info Table rows
-                            _buildInfoRow('Tên', 'Lê Ngọc Duy'),
-                            _buildInfoRow('Tiểu sử', 'Thiết lập ngay', isPlaceholder: true),
+                            _buildInfoRow(
+                              'Họ và Tên',
+                              _name,
+                              onTap: () => _showEditDialog(
+                                title: 'Họ và Tên',
+                                initialValue: _name,
+                                onSave: _updateName,
+                              ),
+                            ),
+                            _buildInfoRow(
+                              'Email / SĐT',
+                              _emailOrPhone,
+                              onTap: () => _showEditDialog(
+                                title: 'Email / SĐT',
+                                initialValue: _emailOrPhone,
+                                onSave: _updateEmailOrPhone,
+                              ),
+                            ),
                             _buildInfoRow('Giới tính', 'Nam'),
                             _buildInfoRow('Ngày sinh', '**/ **/2005'),
-                            _buildInfoRow('Thông tin cá nhân', 'Thiết lập ngay', isPlaceholderRed: true),
-                            _buildInfoRow('Số điện thoại', '********34'),
-                            _buildInfoRow('Email', 'le********k@gmail.com'),
-                            _buildInfoRow('Tài khoản liên kết', '', showDivider: false),
+                            _buildInfoRow('Tài khoản liên kết', 'Google / Facebook', showDivider: false),
                           ],
                         ),
                       ),
@@ -148,6 +316,7 @@ class EditProfilePage extends StatelessWidget {
   Widget _buildInfoRow(
     String label,
     String value, {
+    VoidCallback? onTap,
     bool isPlaceholder = false,
     bool isPlaceholderRed = false,
     bool showDivider = true,
@@ -161,38 +330,48 @@ class EditProfilePage extends StatelessWidget {
 
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black87,
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
+                  ),
                 ),
-              ),
-              Row(
-                children: [
-                  Text(
-                    value,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w400,
-                      color: valueColor,
-                    ),
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          value,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: valueColor,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Icon(
+                        onTap != null ? Icons.edit_note : Icons.arrow_forward_ios,
+                        size: onTap != null ? 20 : 14,
+                        color: onTap != null ? Colors.deepOrange : Colors.grey,
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 6),
-                  const Icon(
-                    Icons.arrow_forward_ios,
-                    size: 14,
-                    color: Colors.grey,
-                  ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
         if (showDivider)

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../food_catalog/presentation/pages/food_home_page.dart';
 import 'package:food_app/core/router/app_router.dart';
+import 'package:food_app/core/services/auth_service.dart';
 
 class LogoutDialog extends StatelessWidget {
   const LogoutDialog({super.key});
@@ -51,9 +52,11 @@ class LogoutDialog extends StatelessWidget {
                     ),
                     elevation: 0,
                   ),
-                  onPressed: () {
+                  onPressed: () async {
+                    await AuthService.logout();
                     FoodHomePage.hasShownAd =
                         false; // Reset banner show state for the next session
+                    if (!context.mounted) return;
                     context.go(AppRouter.login);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(

@@ -15,6 +15,11 @@ class OrderHistoryPage extends StatefulWidget {
 }
 
 class _OrderHistoryPageState extends State<OrderHistoryPage> {
+  @override
+  void initState() {
+    super.initState();
+    OrderManager.instance.fetchOrdersFromBackend();
+  }
   String _formatPrice(int price) {
     return '${price.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}đ';
   }

@@ -8,6 +8,8 @@ import '../../../../features/cart/domain/entities/cart_item.dart';
 import '../../data/order_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:food_app/core/router/app_router.dart';
+import 'package:food_app/core/services/order_service.dart';
+import 'package:food_app/core/services/payment_service.dart';
 
 class Voucher {
   final String code;
@@ -771,18 +773,50 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ),
               onPressed: isCartEmpty
                   ? null
-                  : () {
+                  : () async {
                       final int currentTotal = total;
                       final String currentMethod = _selectedPaymentMethod;
-                      final String orderId =
-                          '#FOOD-${(100000 + math.Random().nextInt(900000))}';
-
-                      // Sao chép danh sách các món ăn trong giỏ hàng để lưu vào lịch sử
                       final itemsCopy = List<CartItem>.from(
                         context.read<CartManager>().items,
                       );
 
-                      // Thêm đơn hàng mới vào lịch sử đơn hàng
+                      // Gửi đơn hàng lên Backend API
+                      final orderItemsJson = itemsCopy.map((item) => {
+                        'food_name': item.name,
+                        'food_image': item.image,
+                        'price': '${item.price}đ',
+                        'quantity': item.quantity,
+                      }).toList();
+
+                      final result = await OrderService.createOrder(
+                        totalPrice: currentTotal,
+                        paymentMethod: currentMethod,
+                        shippingAddress: _deliveryAddress,
+                        items: orderItemsJson,
+                        note: _deliveryNote,
+                      );
+
+                      String orderId = '#FOOD-${(100000 + math.Random().nextInt(900000))}';
+                      String? qrUrl;
+                      String? txCode;
+
+                      if (result['success'] == true && result['data'] != null) {
+                        orderId = '#${result['data']['order_code']}';
+                        final int backendOrderId = result['data']['id'];
+
+                        final paymentRes = await PaymentService.createPaymentQr(
+                          orderId: backendOrderId,
+                          paymentMethod: currentMethod,
+                          amount: currentTotal,
+                        );
+
+                        if (paymentRes['success'] == true && paymentRes['data'] != null) {
+                          qrUrl = paymentRes['data']['qr_url'];
+                          txCode = paymentRes['data']['transaction_code'];
+                        }
+                      }
+
+                      // Cập nhật vào OrderManager và làm trống giỏ hàng
                       OrderManager.instance.addOrder(
                         OrderHistoryItem(
                           orderId: orderId,
@@ -796,7 +830,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         ),
                       );
 
-                      // Làm trống giỏ hàng
+                      if (!mounted) return;
                       context.read<CartManager>().clear();
 
                       context.push(
@@ -805,6 +839,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           'totalPrice': currentTotal,
                           'paymentMethod': currentMethod,
                           'orderId': orderId,
+                          'qrUrl': qrUrl,
+                          'txCode': txCode,
                         },
                       );
                     },

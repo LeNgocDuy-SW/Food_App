@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/summer_animated_background.dart';
 import '../widgets/login_button.dart';
 import 'package:food_app/core/router/app_router.dart';
+import 'package:food_app/core/services/auth_service.dart';
 
 class ForgotPage extends StatefulWidget {
   const ForgotPage({super.key});
@@ -16,11 +17,113 @@ class ForgotPage extends StatefulWidget {
 class _ForgotPageState extends State<ForgotPage> {
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   void dispose() {
     _phoneController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleSendOtp() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final phoneOrEmail = _phoneController.text.trim();
+    final result = await AuthService.forgotPassword(phoneOrEmail: phoneOrEmail);
+
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (result['success'] == true) {
+      final otpCode = result['otp_code'];
+      
+      await showDialog(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.mark_email_read, color: Colors.green, size: 28),
+              SizedBox(width: 8),
+              Text(
+                'Mã OTP của bạn',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Hệ thống vừa tạo mã xác thực gửi tới $phoneOrEmail:',
+                style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.amber.shade700, width: 1.5),
+                ),
+                child: Text(
+                  otpCode ?? '----',
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 8,
+                    color: Colors.brown,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                '(Chế độ mô phỏng SMS Demo)',
+                style: TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepOrange,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text(
+                'Nhập OTP ngay',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      );
+
+      if (!mounted) return;
+
+      context.push(
+        AppRouter.confirmPassword,
+        extra: {'phoneOrEmail': phoneOrEmail},
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Có lỗi xảy ra!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -47,7 +150,6 @@ class _ForgotPageState extends State<ForgotPage> {
                               color: Colors.black,
                             ),
                           ),
-                          // 2. Phần nội dung chính được căn giữa màn hình (cả ngang và dọc)
                           Expanded(
                             child: Container(
                               padding: const EdgeInsets.symmetric(
@@ -67,11 +169,11 @@ class _ForgotPageState extends State<ForgotPage> {
                                         color: Colors.white,
                                       ),
                                     ),
-                                    Row(
+                                    const Row(
                                       children: [
-                                        const Expanded(
+                                        Expanded(
                                           child: Text(
-                                            'Enter your phone number below. We will send you an SMS with a pin code to confirm your identity',
+                                            'Enter your email or phone number below. We will send you a verification pin code',
                                             style: TextStyle(
                                               fontSize: AppSizes.TextSize16,
                                               fontWeight: FontWeight.w400,
@@ -79,30 +181,31 @@ class _ForgotPageState extends State<ForgotPage> {
                                             ),
                                           ),
                                         ),
-                                        const SizedBox(width: 12),
+                                        SizedBox(width: 12),
                                       ],
                                     ),
                                     const SizedBox(height: 22),
                                     TextFormField(
                                       controller: _phoneController,
-                                      keyboardType: TextInputType.phone,
-                                      style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                                      keyboardType: TextInputType.emailAddress,
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                       validator: (value) {
                                         if (value == null || value.trim().isEmpty) {
-                                          return 'Vui lòng nhập số điện thoại';
-                                        }
-                                        final clean = value.trim();
-                                        final phoneRegex = RegExp(r'^[0-9]{9,11}$');
-                                        if (!phoneRegex.hasMatch(clean)) {
-                                          return 'Số điện thoại không hợp lệ (9-11 chữ số)';
+                                          return 'Vui lòng nhập Email hoặc Số điện thoại';
                                         }
                                         return null;
                                       },
                                       decoration: InputDecoration(
-                                        hintText: 'Phone number',
+                                        hintText: 'Email / Phone number',
                                         filled: true,
                                         fillColor: AppColors.white,
-                                        errorStyle: const TextStyle(color: Colors.yellowAccent, fontWeight: FontWeight.bold),
+                                        errorStyle: const TextStyle(
+                                          color: Colors.yellowAccent,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                         contentPadding:
                                             const EdgeInsets.symmetric(
                                               horizontal: 24,
@@ -119,21 +222,23 @@ class _ForgotPageState extends State<ForgotPage> {
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              Icon(Icons.phone_android),
+                                              Icon(Icons.person_outline),
                                             ],
                                           ),
                                         ),
                                       ),
                                     ),
                                     const SizedBox(height: 35),
-                                    LoginButton(
-                                      title: 'Send SMS',
-                                      onPressed: () {
-                                        if (_formKey.currentState!.validate()) {
-                                          context.push(AppRouter.confirmPassword);
-                                        }
-                                      },
-                                    ),
+                                    _isLoading
+                                        ? const Center(
+                                            child: CircularProgressIndicator(
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : LoginButton(
+                                            title: 'Send OTP',
+                                            onPressed: _handleSendOtp,
+                                          ),
                                   ],
                                 ),
                               ),
@@ -152,3 +257,4 @@ class _ForgotPageState extends State<ForgotPage> {
     );
   }
 }
+

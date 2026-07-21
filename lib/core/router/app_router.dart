@@ -106,19 +106,30 @@ class AppRouter {
       ),
       GoRoute(
         path: confirmPassword,
-        pageBuilder: (context, state) => buildPageWithTransition(
-          context: context,
-          state: state,
-          child: const ConfirmPassWordPage(),
-        ),
+        pageBuilder: (context, state) {
+          final args = state.extra as Map<String, dynamic>? ?? {};
+          return buildPageWithTransition(
+            context: context,
+            state: state,
+            child: ConfirmPassWordPage(
+              phoneOrEmail: args['phoneOrEmail'] as String? ?? '',
+            ),
+          );
+        },
       ),
       GoRoute(
         path: changePassword,
-        pageBuilder: (context, state) => buildPageWithTransition(
-          context: context,
-          state: state,
-          child: const ChangePasswordPage(),
-        ),
+        pageBuilder: (context, state) {
+          final args = state.extra as Map<String, dynamic>? ?? {};
+          return buildPageWithTransition(
+            context: context,
+            state: state,
+            child: ChangePasswordPage(
+              phoneOrEmail: args['phoneOrEmail'] as String? ?? '',
+              otpCode: args['otpCode'] as String? ?? '',
+            ),
+          );
+        },
       ),
       GoRoute(
         path: taskbar,
@@ -175,6 +186,8 @@ class AppRouter {
               totalPrice: args['totalPrice'] as int,
               paymentMethod: args['paymentMethod'] as String,
               orderId: args['orderId'] as String,
+              qrUrl: args['qrUrl'] as String?,
+              txCode: args['txCode'] as String?,
             ),
           );
         },

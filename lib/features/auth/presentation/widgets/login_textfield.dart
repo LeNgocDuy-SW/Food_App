@@ -23,9 +23,10 @@ class _LoginTextFieldState extends State<LoginTextField> {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        // 1. Ô nhập Email hoặc Số điện thoại
         TextFormField(
           controller: widget.phoneController,
-          keyboardType: TextInputType.phone,
+          keyboardType: TextInputType.emailAddress,
           style: const TextStyle(
             fontSize: AppSizes.TextSize16,
             color: AppColors.black,
@@ -33,16 +34,22 @@ class _LoginTextFieldState extends State<LoginTextField> {
           ),
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
-              return 'Vui lòng nhập số điện thoại';
+              return 'Vui lòng nhập email hoặc số điện thoại';
             }
             final cleanValue = value.trim();
-            final phoneRegex = RegExp(r'^[0-9]{9,10}$');
-            if (!phoneRegex.hasMatch(cleanValue)) {
-              return 'Số điện thoại không hợp lệ (9-10 chữ số)';
+            final emailRegex = RegExp(
+              r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+            );
+            final phoneRegex = RegExp(r'^[0-9]{9,11}$');
+
+            if (!emailRegex.hasMatch(cleanValue) &&
+                !phoneRegex.hasMatch(cleanValue)) {
+              return 'Vui lòng nhập đúng định dạng email hoặc số điện thoại';
             }
             return null;
           },
           decoration: InputDecoration(
+            hintText: 'Email hoặc Số điện thoại',
             filled: true,
             fillColor: AppColors.white,
             errorStyle: const TextStyle(
@@ -50,31 +57,15 @@ class _LoginTextFieldState extends State<LoginTextField> {
               fontWeight: FontWeight.bold,
             ),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
-            prefixIcon: Padding(
-              padding: const EdgeInsets.only(left: 24, right: 12),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    '+84',
-                    style: TextStyle(
-                      fontSize: AppSizes.TextSize16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.black,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Container(
-                    width: 2,
-                    height: 28,
-                    color: const Color(0xFFD9D9D9),
-                  ),
-                ],
-              ),
+            prefixIcon: const Padding(
+              padding: EdgeInsets.only(left: 20, right: 12),
+              child: Icon(Icons.person_outline, color: Colors.grey),
             ),
           ),
         ),
         const SizedBox(height: 28),
+
+        // 2. Ô nhập Mật khẩu
         TextFormField(
           controller: widget.passwordController,
           obscureText: _obscurePassword,
@@ -100,12 +91,9 @@ class _LoginTextFieldState extends State<LoginTextField> {
               fontWeight: FontWeight.bold,
             ),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
-            prefixIcon: Padding(
-              padding: const EdgeInsets.only(left: 24, right: 12),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [const Icon(Icons.lock_outline)],
-              ),
+            prefixIcon: const Padding(
+              padding: EdgeInsets.only(left: 20, right: 12),
+              child: Icon(Icons.lock_outline, color: Colors.grey),
             ),
             suffixIcon: Padding(
               padding: const EdgeInsets.only(right: 12),

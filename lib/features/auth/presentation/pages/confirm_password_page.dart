@@ -5,9 +5,11 @@ import '../../../../core/summer_animated_background.dart';
 import '../widgets/login_button.dart';
 import '../widgets/confirm_pin.dart';
 import 'package:food_app/core/router/app_router.dart';
+import 'package:food_app/core/services/auth_service.dart';
 
 class ConfirmPassWordPage extends StatefulWidget {
-  const ConfirmPassWordPage({super.key});
+  final String phoneOrEmail;
+  const ConfirmPassWordPage({super.key, this.phoneOrEmail = ''});
 
   @override
   State<ConfirmPassWordPage> createState() => _ConfirmPassWordPageState();
@@ -18,6 +20,7 @@ class _ConfirmPassWordPageState extends State<ConfirmPassWordPage> {
     4,
     (_) => TextEditingController(),
   );
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -28,11 +31,73 @@ class _ConfirmPassWordPageState extends State<ConfirmPassWordPage> {
   }
 
   String getFullPin() {
-    return _pinController.map((c) => c.text).join();
+    return _pinController.map((c) => c.text.trim()).join();
+  }
+
+  Future<void> _handleVerifyOtp(String targetPhoneOrEmail) async {
+    final phoneOrEmail = targetPhoneOrEmail.isNotEmpty
+        ? targetPhoneOrEmail
+        : widget.phoneOrEmail;
+    final pin = getFullPin();
+    if (pin.length < 4) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng nhập đủ 4 chữ số OTP'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final result = await AuthService.verifyOtp(
+      phoneOrEmail: phoneOrEmail,
+      otpCode: pin,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (result['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Xác thực OTP thành công!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      context.push(
+        AppRouter.changePassword,
+        extra: {
+          'phoneOrEmail': phoneOrEmail,
+          'otpCode': pin,
+        },
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Mã OTP không đúng!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final extra = GoRouterState.of(context).extra as Map<String, dynamic>?;
+    final extraPhoneOrEmail = extra?['phoneOrEmail'] as String? ?? '';
+    final phoneOrEmail = extraPhoneOrEmail.isNotEmpty
+        ? extraPhoneOrEmail
+        : widget.phoneOrEmail;
+
+
     return Scaffold(
       body: SummerAnimatedBackground(
         child: SafeArea(
@@ -55,7 +120,6 @@ class _ConfirmPassWordPageState extends State<ConfirmPassWordPage> {
                               color: Colors.black,
                             ),
                           ),
-                          // 2. Phần nội dung chính được căn giữa màn hình (cả ngang và dọc)
                           Expanded(
                             child: Container(
                               padding: const EdgeInsets.symmetric(
@@ -66,7 +130,7 @@ class _ConfirmPassWordPageState extends State<ConfirmPassWordPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const Text(
-                                    'Forgot Password',
+                                    'Confirm OTP',
                                     style: TextStyle(
                                       fontSize: 32,
                                       fontWeight: FontWeight.bold,
@@ -75,10 +139,12 @@ class _ConfirmPassWordPageState extends State<ConfirmPassWordPage> {
                                   ),
                                   Row(
                                     children: [
-                                      const Expanded(
+                                      Expanded(
                                         child: Text(
-                                          'Enter the pin code sent to your mobile phone',
-                                          style: TextStyle(
+                                          phoneOrEmail.isNotEmpty
+                                              ? 'Enter the pin code sent to $phoneOrEmail'
+                                              : 'Enter the pin code sent to your mobile phone or email',
+                                          style: const TextStyle(
                                             fontSize: AppSizes.TextSize16,
                                             fontWeight: FontWeight.w400,
                                             color: Colors.white,
@@ -91,14 +157,16 @@ class _ConfirmPassWordPageState extends State<ConfirmPassWordPage> {
                                   const SizedBox(height: 22),
                                   ConfirmPin(controllers: _pinController),
                                   const SizedBox(height: 35),
-                                  LoginButton(
-                                    title: 'Confirm',
-                                    onPressed: () {
-                                      String pin = getFullPin();
-                                      print(pin);
-                                      context.push(AppRouter.changePassword);
-                                    },
-                                  ),
+                                  _isLoading
+                                      ? const Center(
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : LoginButton(
+                                          title: 'Confirm OTP',
+                                          onPressed: () => _handleVerifyOtp(phoneOrEmail),
+                                        ),
                                 ],
                               ),
                             ),
@@ -116,3 +184,4 @@ class _ConfirmPassWordPageState extends State<ConfirmPassWordPage> {
     );
   }
 }
+

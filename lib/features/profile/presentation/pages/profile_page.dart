@@ -4,9 +4,42 @@ import '../../../../core/widget.dart';
 import '../../../food_catalog/presentation/widgets/food_card_widget.dart';
 import '../../../order/data/order_manager.dart';
 import 'package:food_app/core/router/app_router.dart';
+import 'package:food_app/core/services/auth_service.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  String _userName = 'Đang tải...';
+  String _userEmail = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    final result = await AuthService.getCurrentUser();
+    if (mounted) {
+      if (result['success']) {
+        final data = result['data'];
+        setState(() {
+          _userName = data['full_name'] ?? 'Người dùng';
+          _userEmail = data['email'] ?? '';
+        });
+      } else {
+        setState(() {
+          _userName = 'Khách';
+          _userEmail = '';
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,63 +118,86 @@ class ProfilePage extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // User Avatar
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2.5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    )
-                  ],
-                  image: const DecorationImage(
-                    image: AssetImage('assets/image/avatar.png'),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 14),
-              
-              // Name & Member status tag
-              Expanded(
-                child: Column(
+              GestureDetector(
+                onTap: () async {
+                  await context.push(AppRouter.editProfile);
+                  _loadUserProfile();
+                },
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 4),
-                    const Text(
-                      'lengocduy25',
-                      style: TextStyle(
-                        fontSize: 21,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
+                    // User Avatar
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      width: 64,
+                      height: 64,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text(
-                        'Thành viên Vàng 🌟',
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          )
+                        ],
+                        image: const DecorationImage(
+                          image: AssetImage('assets/image/avatar.png'),
+                          fit: BoxFit.cover,
                         ),
                       ),
                     ),
+                    const SizedBox(width: 14),
+                    
+                    // Name & Member status tag
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width * 0.4,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 4),
+                          Text(
+                            _userName,
+                            style: const TextStyle(
+                              fontSize: 21,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          if (_userEmail.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              _userEmail,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.white70,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Text(
+                              'Thành viên Vàng 🌟 (Bấm để sửa)',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
-              
+              const Spacer(),
               // Top Action Buttons
               Row(
                 mainAxisSize: MainAxisSize.min,
@@ -173,9 +229,9 @@ class ProfilePage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withOpacity(0.2), width: 1.2),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1.2),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -199,9 +255,9 @@ class ProfilePage extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.18),
+          color: Colors.white.withValues(alpha: 0.18),
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.white.withOpacity(0.15), width: 1),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1),
         ),
         child: Icon(icon, color: Colors.white, size: 18),
       ),
@@ -297,16 +353,16 @@ class ProfilePage extends StatelessWidget {
                 margin: const EdgeInsets.only(bottom: 16),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.04),
+                  color: statusColor.withValues(alpha: 0.04),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: statusColor.withOpacity(0.2), width: 1.2),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.2), width: 1.2),
                 ),
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
+                        color: statusColor.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -444,13 +500,13 @@ class ProfilePage extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
         border: Border.all(
-          color: Colors.grey.withOpacity(0.06),
+          color: Colors.grey.withValues(alpha: 0.06),
           width: 1,
         ),
       ),
@@ -508,13 +564,13 @@ class ProfilePage extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
         border: Border.all(
-          color: Colors.grey.withOpacity(0.06),
+          color: Colors.grey.withValues(alpha: 0.06),
           width: 1,
         ),
       ),

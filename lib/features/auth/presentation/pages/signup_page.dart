@@ -7,6 +7,7 @@ import '../../../../core/summer_animated_background.dart';
 import '../widgets/sign_up_textfield.dart';
 import '../widgets/login_button.dart';
 import 'package:food_app/core/router/app_router.dart';
+import 'package:food_app/core/services/auth_service.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -104,7 +105,8 @@ class _SignupPageState extends State<SignupPage> {
                                       hintText: 'Name:',
                                       controller: _nameController,
                                       validator: (value) {
-                                        if (value == null || value.trim().isEmpty) {
+                                        if (value == null ||
+                                            value.trim().isEmpty) {
                                           return 'Vui lòng nhập tên';
                                         }
                                         if (value.trim().length < 2) {
@@ -118,13 +120,17 @@ class _SignupPageState extends State<SignupPage> {
                                       hintText: 'Email/Phone:',
                                       controller: _emailPhoneController,
                                       validator: (value) {
-                                        if (value == null || value.trim().isEmpty) {
+                                        if (value == null ||
+                                            value.trim().isEmpty) {
                                           return 'Vui lòng nhập email hoặc số điện thoại';
                                         }
                                         final clean = value.trim();
                                         final emailRegex = RegExp(
-                                            r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
-                                        final phoneRegex = RegExp(r'^[0-9]{9,11}$');
+                                          r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                                        );
+                                        final phoneRegex = RegExp(
+                                          r'^[0-9]{9,11}$',
+                                        );
                                         if (!emailRegex.hasMatch(clean) &&
                                             !phoneRegex.hasMatch(clean)) {
                                           return 'Vui lòng nhập đúng định dạng email hoặc số điện thoại';
@@ -150,9 +156,50 @@ class _SignupPageState extends State<SignupPage> {
                                     const SizedBox(height: 35),
                                     LoginButton(
                                       title: 'Sign Up',
-                                      onPressed: () {
+                                      onPressed: () async {
                                         if (_formKey.currentState!.validate()) {
-                                          context.push(AppRouter.login);
+                                          showDialog(
+                                            context: context,
+                                            barrierDismissible: false,
+                                            builder: (_) => const Center(
+                                              child:
+                                                  CircularProgressIndicator(),
+                                            ),
+                                          );
+                                          final result =
+                                              await AuthService.signUp(
+                                                fullName: _nameController.text
+                                                    .trim(),
+                                                email: _emailPhoneController
+                                                    .text
+                                                    .trim(),
+                                                password:
+                                                    _passwordController.text,
+                                              );
+                                          if (!mounted) return;
+                                          Navigator.pop(context);
+                                          if (result['success']) {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                  "Đăng ký thành công! Vui lòng đăng nhập.",
+                                                ),
+                                              ),
+                                            );
+                                            context.push(AppRouter.login);
+                                          } else {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  result['message'],
+                                                ),
+                                              ),
+                                            );
+                                          }
                                         }
                                       },
                                     ),

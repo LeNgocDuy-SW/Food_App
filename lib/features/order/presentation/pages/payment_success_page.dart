@@ -7,17 +7,22 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widget.dart';
 import '../../data/order_manager.dart';
 import 'package:food_app/core/router/app_router.dart';
+import 'package:food_app/core/services/payment_service.dart';
 
 class PaymentSuccessPage extends StatefulWidget {
   final int totalPrice;
   final String paymentMethod;
   final String orderId;
+  final String? qrUrl;
+  final String? txCode;
 
   const PaymentSuccessPage({
     super.key,
     required this.totalPrice,
     required this.paymentMethod,
     required this.orderId,
+    this.qrUrl,
+    this.txCode,
   });
 
   @override
@@ -161,6 +166,12 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
                         _buildAmountPaidBox(),
                         const SizedBox(height: 16),
 
+                        // Box QR Code (Nếu thanh toán qua Ngân hàng / MoMo)
+                        if (widget.qrUrl != null && widget.qrUrl!.isNotEmpty) ...[
+                          _buildQrCodeCard(),
+                          const SizedBox(height: 16),
+                        ],
+
                         // Box 2: Thông tin mã đơn hàng
                         _buildOrderDetailsBox(),
                         const SizedBox(height: 24),
@@ -295,6 +306,123 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
                 ],
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQrCodeCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: Colors.orange.withOpacity(0.3), width: 1.5),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(Icons.qr_code_scanner_rounded, color: AppColors.primaryRed, size: 22),
+              SizedBox(width: 8),
+              Text(
+                'Quét mã QR để chuyển khoản',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              color: Colors.grey.shade50,
+              child: Image.network(
+                widget.qrUrl!,
+                width: 200,
+                height: 200,
+                fit: BoxFit.contain,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return const SizedBox(
+                    width: 200,
+                    height: 200,
+                    child: Center(
+                      child: CircularProgressIndicator(color: AppColors.primaryRed),
+                    ),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) => Container(
+                  width: 200,
+                  height: 200,
+                  color: Colors.grey.shade200,
+                  child: const Center(
+                    child: Icon(Icons.qr_code_2_rounded, size: 80, color: Colors.grey),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Mã giao dịch: ${widget.txCode ?? widget.orderId}',
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(height: 14),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              minimumSize: const Size(double.infinity, 44),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            onPressed: () async {
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => const Center(child: CircularProgressIndicator()),
+              );
+
+              final int numericOrderId = int.tryParse(widget.orderId.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+              final res = await PaymentService.confirmPayment(
+                transactionCode: widget.txCode ?? widget.orderId,
+                orderId: numericOrderId,
+              );
+
+              if (!mounted) return;
+              Navigator.pop(context);
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(res['success'] == true ? '🎉 Đã xác nhận thanh toán thành công!' : (res['message'] ?? 'Xác nhận thất bại!')),
+                  backgroundColor: res['success'] == true ? Colors.green : Colors.red,
+                ),
+              );
+            },
+            icon: const Icon(Icons.check_circle_outline, size: 18),
+            label: const Text(
+              'Tôi đã chuyển khoản xong',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),

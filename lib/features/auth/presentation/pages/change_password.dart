@@ -4,9 +4,17 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/summer_animated_background.dart';
 import '../widgets/login_button.dart';
 import 'package:food_app/core/router/app_router.dart';
+import 'package:food_app/core/services/auth_service.dart';
 
 class ChangePasswordPage extends StatefulWidget {
-  const ChangePasswordPage({super.key});
+  final String phoneOrEmail;
+  final String otpCode;
+
+  const ChangePasswordPage({
+    super.key,
+    this.phoneOrEmail = '',
+    this.otpCode = '',
+  });
 
   @override
   State<ChangePasswordPage> createState() => _ChangePasswordPageState();
@@ -18,6 +26,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   final _confirmPasswordController = TextEditingController();
   bool _obscureNewPassword = true;
   bool _obscureConfirmPassword = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -26,8 +35,71 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     super.dispose();
   }
 
+  Future<void> _handleChangePassword(String targetPhoneOrEmail, String targetOtpCode) async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final phoneOrEmail = targetPhoneOrEmail.isNotEmpty
+        ? targetPhoneOrEmail
+        : widget.phoneOrEmail;
+    final otpCode = targetOtpCode.isNotEmpty ? targetOtpCode : widget.otpCode;
+
+    if (phoneOrEmail.isEmpty || otpCode.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Thiếu thông tin xác thực OTP! Vui lòng làm lại từ bước Quên mật khẩu.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final result = await AuthService.resetPassword(
+      phoneOrEmail: phoneOrEmail,
+      otpCode: otpCode,
+      newPassword: _newPasswordController.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (result['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Đổi mật khẩu thành công!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      context.go(AppRouter.login);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Đổi mật khẩu thất bại!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final extra = GoRouterState.of(context).extra as Map<String, dynamic>?;
+    final extraPhoneOrEmail = extra?['phoneOrEmail'] as String? ?? '';
+    final extraOtpCode = extra?['otpCode'] as String? ?? '';
+
+    final phoneOrEmail = extraPhoneOrEmail.isNotEmpty
+        ? extraPhoneOrEmail
+        : widget.phoneOrEmail;
+    final otpCode = extraOtpCode.isNotEmpty ? extraOtpCode : widget.otpCode;
+
+
     return Scaffold(
       body: SummerAnimatedBackground(
         child: SafeArea(
@@ -50,7 +122,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                               color: Colors.black,
                             ),
                           ),
-                          // 2. Phần nội dung chính được căn giữa màn hình (cả ngang và dọc)
                           Expanded(
                             child: Container(
                               padding: const EdgeInsets.symmetric(
@@ -74,7 +145,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                                     TextFormField(
                                       controller: _newPasswordController,
                                       obscureText: _obscureNewPassword,
-                                      style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                       validator: (value) {
                                         if (value == null || value.isEmpty) {
                                           return 'Vui lòng nhập mật khẩu mới';
@@ -88,7 +162,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                                         hintText: 'New Password',
                                         filled: true,
                                         fillColor: AppColors.white,
-                                        errorStyle: const TextStyle(color: Colors.yellowAccent, fontWeight: FontWeight.bold),
+                                        errorStyle: const TextStyle(
+                                          color: Colors.yellowAccent,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                         contentPadding:
                                             const EdgeInsets.symmetric(
                                               horizontal: 24,
@@ -143,7 +220,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                                     TextFormField(
                                       controller: _confirmPasswordController,
                                       obscureText: _obscureConfirmPassword,
-                                      style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                       validator: (value) {
                                         if (value == null || value.isEmpty) {
                                           return 'Vui lòng xác nhận mật khẩu';
@@ -157,7 +237,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                                         hintText: 'Confirm Password',
                                         filled: true,
                                         fillColor: AppColors.white,
-                                        errorStyle: const TextStyle(color: Colors.yellowAccent, fontWeight: FontWeight.bold),
+                                        errorStyle: const TextStyle(
+                                          color: Colors.yellowAccent,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                         contentPadding:
                                             const EdgeInsets.symmetric(
                                               horizontal: 24,
@@ -209,14 +292,19 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                                       ),
                                     ),
                                     const SizedBox(height: 35),
-                                    LoginButton(
-                                      title: 'Change Password',
-                                      onPressed: () {
-                                        if (_formKey.currentState!.validate()) {
-                                          context.push(AppRouter.login);
-                                        }
-                                      },
-                                    ),
+                                    _isLoading
+                                        ? const Center(
+                                            child: CircularProgressIndicator(
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : LoginButton(
+                                            title: 'Change Password',
+                                            onPressed: () => _handleChangePassword(
+                                              phoneOrEmail,
+                                              otpCode,
+                                            ),
+                                          ),
                                   ],
                                 ),
                               ),
@@ -235,3 +323,4 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     );
   }
 }
+

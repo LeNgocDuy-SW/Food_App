@@ -11,3 +11,5 @@ class User(Base):
     hashed_password = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    reset_otp = Column(String(10), nullable=True)
+    reset_otp_expires = Column(DateTime, nullable=True)

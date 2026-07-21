@@ -8,6 +8,7 @@ import '../widgets/login_button.dart';
 import '../widgets/login_with.dart';
 import 'package:food_app/core/router/app_router.dart';
 import 'package:food_app/features/food_catalog/presentation/pages/food_home_page.dart';
+import 'package:food_app/core/services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -106,10 +107,36 @@ class _LoginPageState extends State<LoginPage> {
                             const SizedBox(height: 25),
                             LoginButton(
                               title: 'Login',
-                              onPressed: () {
+                              onPressed: () async {
                                 if (_formKey.currentState!.validate()) {
-                                  FoodHomePage.hasShownAd = false; // Reset banner show state for the new session
-                                  context.go(AppRouter.taskbar);
+                                  showDialog(
+                                    context: context,
+                                    barrierDismissible: false,
+                                    builder: (_) => const Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  );
+                                  final result = await AuthService.login(
+                                    email: _phoneController.text.trim(),
+                                    password: _passwordController.text.trim(),
+                                  );
+                                  if (!mounted) return;
+                                  Navigator.pop(context);
+                                  if (result['success']) {
+                                    FoodHomePage.hasShownAd = false;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text("Login Success"),
+                                      ),
+                                    );
+                                    context.go(AppRouter.taskbar);
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(result['message']),
+                                      ),
+                                    );
+                                  }
                                 }
                               },
                             ),
