@@ -112,7 +112,7 @@ app = FastAPI(
 )
 if not os.path.exists("uploads"):
     os.makedirs("uploads")
-app.mount("/static", StaticFiles(directory = "uploads", name = "static"))
+app.mount("/static", StaticFiles(directory="uploads"), name="static")
 # Thêm CORS Middleware để Flutter App (Web/Android/iOS) có thể gọi API không bị chặn
 app.add_middleware(
     CORSMiddleware,
