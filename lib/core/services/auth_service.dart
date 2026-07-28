@@ -5,25 +5,37 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
   static const String _tokenKey = 'access_token';
-  static const String pcIpAddress = '192.168.1.100';
+  static const String pcIpAddress = '192.168.1.102';
 
   // Biến lưu trữ Root URL máy chủ đang hoạt động tốt nhất (e.g. http://192.168.1.100:8000)
   static String? _workingRootUrl;
 
+  // IP Máy chủ DigitalOcean đã deploy online
+  static const String serverOnlineUrl = 'http://204.48.17.52';
+
   // Danh sách các địa chỉ Server dự phòng ưu tiên theo từng nền tảng thiết bị
   static List<String> get _candidateRootUrls {
     if (kIsWeb) {
-      return ['http://localhost:8000', 'http://127.0.0.1:8000'];
+      return [
+        serverOnlineUrl,
+        'http://localhost:8000',
+        'http://127.0.0.1:8000',
+      ];
     }
     if (defaultTargetPlatform == TargetPlatform.windows ||
         defaultTargetPlatform == TargetPlatform.macOS ||
         defaultTargetPlatform == TargetPlatform.linux) {
-      return ['http://127.0.0.1:8000', 'http://$pcIpAddress:8000'];
+      return [
+        serverOnlineUrl,
+        'http://127.0.0.1:8000',
+        'http://$pcIpAddress:8000',
+      ];
     }
     // Mobile Platforms (Android/iOS):
     return [
+      'http://$pcIpAddress:8000', // Ưu tiên 1: Máy tính Local (dùng khi PC bật Backend & cùng Wi-Fi)
+      serverOnlineUrl, // Ưu tiên 2: Server DigitalOcean Online (dùng khi tắt PC hoặc dùng 4G)
       'http://10.0.2.2:8000', // Máy ảo Android Emulator
-      'http://$pcIpAddress:8000', // Máy thật Android/iOS cùng Wi-Fi
       'http://127.0.0.1:8000',
     ];
   }
@@ -33,7 +45,7 @@ class AuthService {
     return '$root/api/v1/auth';
   }
 
-  // Tự động dò tìm song song tất cả địa chỉ máy chủ trong 800ms
+  // Tự động dò tìm song song tất cả địa chỉ máy chủ
   static Future<String> getWorkingRootUrl() async {
     if (_workingRootUrl != null) return _workingRootUrl!;
 
@@ -42,7 +54,7 @@ class AuthService {
         try {
           final res = await http
               .get(Uri.parse('$root/'))
-              .timeout(const Duration(milliseconds: 1000));
+              .timeout(const Duration(milliseconds: 2500));
           if (res.statusCode == 200) return root;
         } catch (_) {}
         return null;
@@ -59,7 +71,7 @@ class AuthService {
     } catch (_) {}
 
     if (defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://$pcIpAddress:8000';
+      return serverOnlineUrl;
     }
     return 'http://127.0.0.1:8000';
   }

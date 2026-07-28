@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -8,6 +9,14 @@ from app.schemas.user import UserOut, UserUpdateProfile
 from app.api.v1.auth import get_current_user
 
 router = APIRouter()
+
+@router.get("/all", response_model=List[UserOut])
+def get_all_users(db: Session = Depends(get_db)):
+    """
+    Lấy danh sách tất cả các tài khoản User đã đăng ký trong hệ thống
+    """
+    return db.query(User).order_by(User.id.desc()).all()
+
 
 @router.put("/me", response_model=UserOut)
 def update_profile(
