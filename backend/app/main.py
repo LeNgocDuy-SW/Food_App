@@ -108,7 +108,9 @@ app = FastAPI(
     description="Backend API cho ứng dụng Food App",
     version="1.0.0"
 )
-
+if not os.path.exists("uploads"):
+    os.makedirs("uploads")
+app.mount("/static", StaticFiles(directory = "uploads", name = "static"))
 # Thêm CORS Middleware để Flutter App (Web/Android/iOS) có thể gọi API không bị chặn
 app.add_middleware(
     CORSMiddleware,

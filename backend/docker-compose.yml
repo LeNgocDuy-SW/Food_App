@@ -1,0 +1,10 @@
+services:
+  backend:
+    build: .
+    container_name: food_app_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./food_app.db:/app/food_app.db
+      - ./uploads:/app/uploads
