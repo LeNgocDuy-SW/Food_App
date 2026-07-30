@@ -33,6 +33,13 @@ class FoodHomePage extends StatefulWidget {
   const FoodHomePage({super.key});
 
   static bool hasShownAd = false;
+  static final List<Function(String category, MealData meal)> _onMealAddedListeners = [];
+
+  static void addMeal(String category, MealData meal) {
+    for (var listener in List.of(_onMealAddedListeners)) {
+      listener(category, meal);
+    }
+  }
 
   @override
   State<FoodHomePage> createState() => _FoodHomePageState();
@@ -189,6 +196,7 @@ class _FoodHomePageState extends State<FoodHomePage> {
   @override
   void initState() {
     super.initState();
+    FoodHomePage._onMealAddedListeners.add(_handleNewMealAdded);
     _localMeals.forEach((category, list) {
       _mealsByCategory[category] = _sortHotItemsFirst(list);
     });
@@ -201,6 +209,22 @@ class _FoodHomePageState extends State<FoodHomePage> {
       });
       FoodHomePage.hasShownAd = true;
     }
+  }
+
+  @override
+  void dispose() {
+    FoodHomePage._onMealAddedListeners.remove(_handleNewMealAdded);
+    super.dispose();
+  }
+
+  void _handleNewMealAdded(String category, MealData newMeal) {
+    if (!mounted) return;
+    setState(() {
+      if (!_mealsByCategory.containsKey(category)) {
+        _mealsByCategory[category] = [];
+      }
+      _mealsByCategory[category]!.insert(0, newMeal);
+    });
   }
 
   Future<void> _loadAllApiData() async {

@@ -42,3 +42,12 @@ def get_food_detail(food_id: int, db: Session = Depends(get_db)):
             detail="Không tìm thấy món ăn này!"
         )
     return food
+
+@router.post("", response_model=FoodOut, status_code=status.HTTP_201_CREATED)
+def create_food(food_in: FoodCreate, db: Session = Depends(get_db)):
+    new_food = Food(**food_in.model_dump())
+    db.add(new_food)
+    db.commit()
+    db.refresh(new_food)
+    return new_food
+
