@@ -7,6 +7,8 @@ import 'package:food_app/features/food_catalog/presentation/widgets/catalog_widg
 import '../widgets/search_bar_widget.dart';
 import '../widgets/food_card_widget.dart';
 import 'package:food_app/core/services/api_service.dart';
+import 'package:food_app/core/services/food_service.dart';
+import 'package:food_app/core/services/auth_service.dart';
 import 'package:food_app/features/food_catalog/presentation/widgets/summer_drawer_widget.dart';
 
 class MealData {
@@ -17,6 +19,10 @@ class MealData {
   final String rating;
   final String soldCount;
   final bool isHot;
+  final String? description;
+  final String? duration;
+  final String? calories;
+  final String? authorName;
 
   MealData({
     required this.id,
@@ -26,6 +32,10 @@ class MealData {
     required this.rating,
     required this.soldCount,
     required this.isHot,
+    this.description,
+    this.duration,
+    this.calories,
+    this.authorName,
   });
 }
 
@@ -193,6 +203,8 @@ class _FoodHomePageState extends State<FoodHomePage> {
     ],
   };
 
+  String _currentUserName = 'Tài Khoản User';
+
   @override
   void initState() {
     super.initState();
@@ -200,6 +212,7 @@ class _FoodHomePageState extends State<FoodHomePage> {
     _localMeals.forEach((category, list) {
       _mealsByCategory[category] = _sortHotItemsFirst(list);
     });
+    _loadCurrentUserInfo();
     _loadAllApiData();
 
     // Tự động hiển thị Banner quảng cáo mùa hè khi mở app
@@ -208,6 +221,34 @@ class _FoodHomePageState extends State<FoodHomePage> {
         _showSummerAdBanner(context);
       });
       FoodHomePage.hasShownAd = true;
+    }
+  }
+
+  Future<void> _loadCurrentUserInfo() async {
+    final cached = await AuthService.getUserName();
+    if (cached != null && cached.isNotEmpty) {
+      if (mounted) {
+        setState(() {
+          _currentUserName = cached;
+        });
+      }
+    }
+    final res = await AuthService.getCurrentUser();
+    if (res['success'] == true && res['data'] != null) {
+      final name = (res['data']['full_name'] as String?)?.trim();
+      final username = (res['data']['username'] as String?)?.trim();
+      final email = (res['data']['email'] as String?)?.trim();
+      final realName = (name != null && name.isNotEmpty)
+          ? name
+          : ((username != null && username.isNotEmpty)
+              ? username
+              : (email ?? 'Tài Khoản User'));
+      await AuthService.saveUserName(realName);
+      if (mounted) {
+        setState(() {
+          _currentUserName = realName;
+        });
+      }
     }
   }
 
@@ -238,10 +279,12 @@ class _FoodHomePageState extends State<FoodHomePage> {
       final results = await Future.wait([
         _apiService.fetchSeafoodMeals(),
         _apiService.fetchBeefMeals(),
+        FoodService.getFoods(),
       ]);
 
-      final rawSeafood = results[0];
-      final rawBeef = results[1];
+      final rawSeafood = results[0] as List;
+      final rawBeef = results[1] as List;
+      final rawBackendFoods = (results[2] as List).cast<Map<String, dynamic>>();
 
       final mappedSeafood = rawSeafood.map((meal) {
         final String id = meal['idMeal'] ?? '0';
@@ -256,6 +299,7 @@ class _FoodHomePageState extends State<FoodHomePage> {
           rating: (4.5 + (idNum % 5) * 0.1).toStringAsFixed(1),
           soldCount: 'Đã bán ${(idNum * 13) % 210 + 45}+',
           isHot: (idNum % 3 == 0),
+          authorName: 'Đầu Bếp Hải Sản',
         );
       }).toList();
 
@@ -272,8 +316,33 @@ class _FoodHomePageState extends State<FoodHomePage> {
           rating: (4.6 + (idNum % 5) * 0.1).toStringAsFixed(1),
           soldCount: 'Đã bán ${(idNum * 17) % 180 + 35}+',
           isHot: (idNum % 2 == 0),
+          authorName: 'Đầu Bếp Bò Steak',
         );
       }).toList();
+
+      // Cập nhật danh mục với các món từ SQLite Backend Database
+      for (var item in rawBackendFoods) {
+        final String cat = item['category'] ?? 'Bánh mỳ';
+        final meal = MealData(
+          id: item['id']?.toString() ?? '',
+          name: item['name'] ?? '',
+          image: item['image'] ?? 'assets/image/pho_ga.png',
+          price: item['price'] ?? '${item['price_num']}đ',
+          rating: item['rating']?.toString() ?? '5.0',
+          soldCount: 'Mới tạo',
+          isHot: item['is_popular'] ?? true,
+          description: item['description'],
+          duration: item['duration'],
+          calories: item['calories'],
+          authorName: item['author_name'] ?? item['authorName'] ?? _currentUserName,
+        );
+        if (!_mealsByCategory.containsKey(cat)) {
+          _mealsByCategory[cat] = [];
+        }
+        if (!_mealsByCategory[cat]!.any((m) => m.name == meal.name)) {
+          _mealsByCategory[cat]!.insert(0, meal);
+        }
+      }
 
       if (!mounted) return;
       setState(() {
@@ -387,10 +456,15 @@ class _FoodHomePageState extends State<FoodHomePage> {
       body: BackgroundContainer(
         opacity: 0.5,
         child: SafeArea(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+          child: RefreshIndicator(
+            onRefresh: _loadAllApiData,
+            color: AppColors.primaryRed,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -490,14 +564,18 @@ class _FoodHomePageState extends State<FoodHomePage> {
                             children: hotMeals.map((meal) {
                               return Padding(
                                 padding: const EdgeInsets.only(right: 20),
-                                child: FoodCardWidget(
-                                  title: meal.name,
-                                  image: meal.image,
-                                  price: meal.price,
-                                  rating: meal.rating,
-                                  isHot: meal.isHot,
-                                  soldCount: meal.soldCount,
-                                ),
+                                  child: FoodCardWidget(
+                                    title: meal.name,
+                                    image: meal.image,
+                                    price: meal.price,
+                                    rating: meal.rating,
+                                    isHot: meal.isHot,
+                                    soldCount: meal.soldCount,
+                                    description: meal.description,
+                                    prepTime: meal.duration,
+                                    calories: meal.calories,
+                                    authorName: meal.authorName ?? _currentUserName,
+                                  ),
                               );
                             }).toList(),
                           ),
@@ -553,8 +631,9 @@ class _FoodHomePageState extends State<FoodHomePage> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildCategoryMealsGrid() {
     if (_selectedCategory == 'Tất cả') {
@@ -604,6 +683,10 @@ class _FoodHomePageState extends State<FoodHomePage> {
                               rating: meal.rating,
                               isHot: meal.isHot,
                               soldCount: meal.soldCount,
+                              description: meal.description,
+                              prepTime: meal.duration,
+                              calories: meal.calories,
+                              authorName: meal.authorName ?? _currentUserName,
                             ),
                           );
                         }).toList(),
@@ -645,6 +728,10 @@ class _FoodHomePageState extends State<FoodHomePage> {
                     rating: meal.rating,
                     isHot: meal.isHot,
                     soldCount: meal.soldCount,
+                    description: meal.description,
+                    prepTime: meal.duration,
+                    calories: meal.calories,
+                    authorName: meal.authorName ?? _currentUserName,
                   ),
                 );
               }).toList(),

@@ -11,7 +11,7 @@ class Food(Base):
     duration = Column(String(50), nullable=True)
     calories = Column(String(50), nullable=True)
     rating = Column(String(10), nullable=True, default="4.8")
-    image = Column(String(255), nullable=False)
+    image = Column(Text, nullable=False)
     description = Column(Text, nullable=True)
     category = Column(String(100), nullable=False, default="Popular", index=True)
     is_popular = Column(Boolean, default=True)

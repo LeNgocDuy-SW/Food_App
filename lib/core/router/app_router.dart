@@ -152,6 +152,9 @@ class AppRouter {
               price: args['price'] as String,
               rating: args['rating'] as String,
               prepTime: args['prepTime'] as String?,
+              calories: args['calories'] as String?,
+              description: args['description'] as String?,
+              authorName: args['authorName'] as String?,
             ),
           );
         },

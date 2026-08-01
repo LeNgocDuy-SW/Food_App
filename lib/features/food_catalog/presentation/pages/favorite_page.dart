@@ -4,6 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widget.dart';
 import '../../data/favorite_manager.dart';
 import 'package:food_app/core/router/app_router.dart';
+import 'package:food_app/core/widgets/app_image_widget.dart';
 
 class FavoritePage extends StatefulWidget {
   final VoidCallback onBack;
@@ -261,21 +262,13 @@ class _FavoritePageState extends State<FavoritePage> {
             // Food Image
             ClipRRect(
               borderRadius: BorderRadius.circular(16),
-              child: Container(
+              child: SizedBox(
                 width: 90,
                 height: 90,
-                color: Colors.grey.shade100,
-                child: item.image.startsWith('http')
-                    ? Image.network(
-                        item.image,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.broken_image, size: 24, color: Colors.grey),
-                      )
-                    : Image.asset(
-                        item.image,
-                        fit: BoxFit.cover,
-                      ),
+                child: AppImageWidget(
+                  imagePath: item.image,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
             const SizedBox(width: 16),

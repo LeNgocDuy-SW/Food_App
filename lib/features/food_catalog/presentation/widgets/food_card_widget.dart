@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:food_app/core/constants/app_colors.dart';
 import '../../data/favorite_manager.dart';
 import 'package:food_app/core/router/app_router.dart';
+import 'package:food_app/core/widgets/app_image_widget.dart';
 
 class FoodCardWidget extends StatefulWidget {
   final String title;
@@ -11,6 +12,10 @@ class FoodCardWidget extends StatefulWidget {
   final String rating;
   final String? soldCount;
   final bool isHot;
+  final String? description;
+  final String? prepTime;
+  final String? calories;
+  final String? authorName;
   final VoidCallback? onTap;
 
   const FoodCardWidget({
@@ -21,6 +26,10 @@ class FoodCardWidget extends StatefulWidget {
     required this.rating,
     this.soldCount,
     this.isHot = false,
+    this.description,
+    this.prepTime,
+    this.calories,
+    this.authorName,
     this.onTap,
   });
 
@@ -29,8 +38,6 @@ class FoodCardWidget extends StatefulWidget {
 }
 
 class _FoodCardWidgetState extends State<FoodCardWidget> {
-  bool _isFavorite = false;
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -42,11 +49,14 @@ class _FoodCardWidgetState extends State<FoodCardWidget> {
                   'image': widget.image,
                   'price': widget.price,
                   'rating': widget.rating,
-                  'prepTime': null,
+                  'prepTime': widget.prepTime,
+                  'calories': widget.calories,
+                  'description': widget.description,
+                  'authorName': widget.authorName,
                 },
               ),
       child: Container(
-        width: 160,
+        width: 165,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
@@ -68,48 +78,12 @@ class _FoodCardWidgetState extends State<FoodCardWidget> {
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(20),
                   ),
-                  child: widget.image.startsWith('http')
-                      ? Image.network(
-                          widget.image,
-                          height: 135,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Container(
-                              height: 135,
-                              color: Colors.grey.shade100,
-                              child: const Center(
-                                  child: SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.0,
-                                      color: AppColors.primaryRed,
-                                    ),
-                                  ),
-                                ),
-                            );
-                          },
-                          errorBuilder: (context, error, stackTrace) =>
-                              Container(
-                            height: 135,
-                            color: Colors.grey.shade200,
-                            child: const Center(
-                              child: Icon(
-                                Icons.broken_image,
-                                color: Colors.grey,
-                                size: 30,
-                              ),
-                            ),
-                          ),
-                        )
-                      : Image.asset(
-                          widget.image,
-                          height: 135,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
+                  child: AppImageWidget(
+                    imagePath: widget.image,
+                    height: 135,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
                 ),
                 // HOT Badge
                 if (widget.isHot)
@@ -212,6 +186,7 @@ class _FoodCardWidgetState extends State<FoodCardWidget> {
                 ),
               ],
             ),
+
             // Info padding
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
@@ -227,6 +202,34 @@ class _FoodCardWidgetState extends State<FoodCardWidget> {
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
                     ),
+                  ),
+                  const SizedBox(height: 3),
+                  // Thẻ Người Đăng Sản Phẩm (Gọn gàng & Ngắn gọn)
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.person_rounded,
+                        size: 12,
+                        color: AppColors.primaryRed,
+                      ),
+                      const SizedBox(width: 3),
+                      Expanded(
+                        child: Text(
+                          widget.authorName != null &&
+                                  widget.authorName!.trim().isNotEmpty &&
+                                  widget.authorName != 'Nguyễn Văn A'
+                              ? widget.authorName!.trim()
+                              : 'Lê Ngọc Duy',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 5),
                   // Rating and Sales Count Row
@@ -301,4 +304,3 @@ class _FoodCardWidgetState extends State<FoodCardWidget> {
     );
   }
 }
-

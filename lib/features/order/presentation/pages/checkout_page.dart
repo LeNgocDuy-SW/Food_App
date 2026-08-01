@@ -1,7 +1,8 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:food_app/core/constants/app_colors.dart';
+import 'package:food_app/core/widgets/app_image_widget.dart';
 import '../../../../core/widget.dart';
 import '../../../../features/cart/data/cart_manager.dart';
 import '../../../../features/cart/domain/entities/cart_item.dart';
@@ -414,21 +415,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(8),
-          child: Container(
+          child: SizedBox(
             width: 48,
             height: 48,
-            color: Colors.grey.shade100,
-            child: image.startsWith('http')
-                ? Image.network(
-                    image,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.broken_image,
-                      size: 20,
-                      color: Colors.grey,
-                    ),
-                  )
-                : Image.asset(image, fit: BoxFit.cover),
+            child: AppImageWidget(
+              imagePath: image,
+              fit: BoxFit.cover,
+            ),
           ),
         ),
         const SizedBox(width: 12),

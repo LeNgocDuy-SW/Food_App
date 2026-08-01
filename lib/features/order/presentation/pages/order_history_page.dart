@@ -6,6 +6,7 @@ import '../../../../features/cart/data/cart_manager.dart';
 import '../../data/order_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:food_app/core/router/app_router.dart';
+import 'package:food_app/core/widgets/app_image_widget.dart';
 
 class OrderHistoryPage extends StatefulWidget {
   const OrderHistoryPage({super.key});
@@ -283,22 +284,13 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Container(
+                      child: SizedBox(
                         width: 40,
                         height: 40,
-                        color: Colors.grey.shade100,
-                        child: item.image.startsWith('http')
-                            ? Image.network(
-                                item.image,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    const Icon(
-                                      Icons.broken_image,
-                                      size: 16,
-                                      color: Colors.grey,
-                                    ),
-                              )
-                            : Image.asset(item.image, fit: BoxFit.cover),
+                        child: AppImageWidget(
+                          imagePath: item.image,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),

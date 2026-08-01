@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+import uuid
+import shutil
+import os
+from fastapi import APIRouter, Depends, HTTPException, Query, status, File, UploadFile, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List, Optional
@@ -8,6 +11,25 @@ from app.models.food import Food
 from app.schemas.food import FoodOut, FoodCreate
 
 router = APIRouter()
+
+@router.post("/upload-image")
+async def upload_food_image(request: Request, file: UploadFile = File(...)):
+    if not os.path.exists("uploads"):
+        os.makedirs("uploads")
+    
+    file_ext = os.path.splitext(file.filename or "image.png")[1]
+    if not file_ext:
+        file_ext = ".png"
+    filename = f"{uuid.uuid4().hex}{file_ext}"
+    file_path = os.path.join("uploads", filename)
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    base_url = str(request.base_url).rstrip("/")
+    image_url = f"{base_url}/static/{filename}"
+    return {"image_url": image_url, "filename": filename}
+
 
 @router.get("", response_model=List[FoodOut])
 def get_foods(

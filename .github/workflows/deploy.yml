@@ -1,0 +1,29 @@
+name: Deploy Backend to DigitalOcean
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to DigitalOcean Droplet via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: '204.48.17.52'
+          username: 'root'
+          key: ${{ secrets.DO_SSH_KEY }}
+          script: |
+            echo "🚀 Starting Deployment to DigitalOcean..."
+            cd /root/food_app || cd /app/food_app || cd ~/food_app || cd /var/www/food_app
+            git pull
+            cd backend
+            docker-compose down
+            docker-compose up -d --build
+            echo "✅ Backend updated & deployed successfully!"

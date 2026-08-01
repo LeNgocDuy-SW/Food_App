@@ -10,33 +10,16 @@ class AuthService {
   // Biến lưu trữ Root URL máy chủ đang hoạt động tốt nhất (e.g. http://192.168.1.100:8000)
   static String? _workingRootUrl;
 
-  // IP Máy chủ DigitalOcean đã deploy online
+  // IP Máy chủ DigitalOcean đã deploy online (Máy chủ tập trung dữ liệu duy nhất)
   static const String serverOnlineUrl = 'http://204.48.17.52';
 
-  // Danh sách các địa chỉ Server dự phòng ưu tiên theo từng nền tảng thiết bị
+  // Danh sách địa chỉ Server (Ưu tiên DigitalOcean Cloud tập trung 1 CSDL duy nhất)
   static List<String> get _candidateRootUrls {
-    if (kIsWeb) {
-      return [
-        serverOnlineUrl,
-        'http://localhost:8000',
-        'http://127.0.0.1:8000',
-      ];
-    }
-    if (defaultTargetPlatform == TargetPlatform.windows ||
-        defaultTargetPlatform == TargetPlatform.macOS ||
-        defaultTargetPlatform == TargetPlatform.linux) {
-      return [
-        serverOnlineUrl,
-        'http://127.0.0.1:8000',
-        'http://$pcIpAddress:8000',
-      ];
-    }
-    // Mobile Platforms (Android/iOS):
     return [
-      'http://$pcIpAddress:8000', // Ưu tiên 1: Máy tính Local (dùng khi PC bật Backend & cùng Wi-Fi)
-      serverOnlineUrl, // Ưu tiên 2: Server DigitalOcean Online (dùng khi tắt PC hoặc dùng 4G)
-      'http://10.0.2.2:8000', // Máy ảo Android Emulator
+      serverOnlineUrl, // Ưu tiên 1: Máy chủ DigitalOcean Cloud
+      'http://$pcIpAddress:8000',
       'http://127.0.0.1:8000',
+      'http://10.0.2.2:8000',
     ];
   }
 
@@ -45,7 +28,7 @@ class AuthService {
     return '$root/api/v1/auth';
   }
 
-  // Tự động dò tìm song song tất cả địa chỉ máy chủ
+  // Tự động dò tìm địa chỉ máy chủ đang hoạt động
   static Future<String> getWorkingRootUrl() async {
     if (_workingRootUrl != null) return _workingRootUrl!;
 
@@ -54,7 +37,7 @@ class AuthService {
         try {
           final res = await http
               .get(Uri.parse('$root/'))
-              .timeout(const Duration(milliseconds: 2500));
+              .timeout(const Duration(seconds: 3));
           if (res.statusCode == 200) return root;
         } catch (_) {}
         return null;
@@ -63,17 +46,14 @@ class AuthService {
       final results = await Future.wait(futures);
       for (final r in results) {
         if (r != null) {
-          debugPrint('[AuthService] Tìm thấy máy chủ hoạt động tại: $r');
+          debugPrint('[AuthService] Máy chủ hoạt động tại: $r');
           _workingRootUrl = r;
           return r;
         }
       }
     } catch (_) {}
 
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      return serverOnlineUrl;
-    }
-    return 'http://127.0.0.1:8000';
+    return serverOnlineUrl;
   }
 
   // Quản lý Token
@@ -87,9 +67,28 @@ class AuthService {
     return prefs.getString(_tokenKey);
   }
 
+  static String? _cachedUserName;
+
+  static Future<void> saveUserName(String name) async {
+    _cachedUserName = name;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('current_user_name', name);
+  }
+
+  static Future<String?> getUserName() async {
+    if (_cachedUserName != null && _cachedUserName!.isNotEmpty) {
+      return _cachedUserName;
+    }
+    final prefs = await SharedPreferences.getInstance();
+    _cachedUserName = prefs.getString('current_user_name');
+    return _cachedUserName;
+  }
+
   static Future<void> logout() async {
+    _cachedUserName = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
+    await prefs.remove('current_user_name');
   }
 
   // Helper thực hiện GET Request thử nghiệm qua các IP dự phòng với timeout 6s
@@ -190,70 +189,108 @@ class AuthService {
     throw lastError ?? Exception('Không thể kết nối đến máy chủ Backend!');
   }
 
-  // 1. Hàm Đăng ký (SignUp)
+  // 1. Hàm Đăng ký (SignUp) - Đăng ký tài khoản trên máy chủ khả dụng
   static Future<Map<String, dynamic>> signUp({
     required String fullName,
     required String email,
     required String password,
   }) async {
-    try {
-      final response = await postApi('/api/v1/auth/signup', {
-        'full_name': fullName,
-        'email': email,
-        'password': password,
-      });
-
-      final responseData = jsonDecode(response.body);
-
-      if (response.statusCode == 201) {
-        return {'success': true, 'data': responseData};
-      } else {
-        return {
-          'success': false,
-          'message': responseData['detail'] ?? 'Đăng ký thất bại!',
-        };
-      }
-    } catch (e) {
-      return {
-        'success': false,
-        'message':
-            'Không thể kết nối đến máy chủ Backend! Vui lòng đảm bảo Server Python đang chạy.',
-      };
+    final activeRoot = await getWorkingRootUrl();
+    final candidateRoots = <String>[activeRoot];
+    for (var r in _candidateRootUrls) {
+      if (!candidateRoots.contains(r)) candidateRoots.add(r);
     }
+
+    String? lastErrorMsg;
+    for (final root in candidateRoots) {
+      try {
+        final uri = Uri.parse('$root/api/v1/auth/signup');
+        debugPrint('[AuthService SignUp] Attempting: $uri');
+        final response = await http
+            .post(
+              uri,
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode({
+                'full_name': fullName,
+                'email': email,
+                'password': password,
+              }),
+            )
+            .timeout(const Duration(seconds: 5));
+
+        final responseData = jsonDecode(response.body);
+
+        if (response.statusCode == 201 || response.statusCode == 200) {
+          _workingRootUrl = root;
+          debugPrint('[AuthService SignUp Success] Registered on $root');
+          return {'success': true, 'data': responseData};
+        } else {
+          lastErrorMsg = responseData['detail'] ?? 'Đăng ký thất bại!';
+          debugPrint('[AuthService SignUp Failed] $root -> $lastErrorMsg');
+        }
+      } catch (e) {
+        debugPrint('[AuthService SignUp Exception] $root -> $e');
+      }
+    }
+
+    return {
+      'success': false,
+      'message':
+          lastErrorMsg ??
+          'Không thể kết nối đến máy chủ Backend! Vui lòng kiểm tra mạng.',
+    };
   }
 
-  // 2. Hàm Đăng nhập (Login)
+  // 2. Hàm Đăng nhập (Login) - Tự động tìm tài khoản trên cả Server Local & DigitalOcean Online
   static Future<Map<String, dynamic>> login({
     required String email,
     required String password,
   }) async {
-    try {
-      final response = await postApi('/api/v1/auth/login', {
-        'email': email,
-        'password': password,
-      });
-
-      final responseData = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        final token = responseData['access_token'];
-        if (token != null) {
-          await saveToken(token);
-        }
-        return {'success': true, 'token': token};
-      } else {
-        return {
-          'success': false,
-          'message': responseData['detail'] ?? 'Đăng nhập thất bại!',
-        };
-      }
-    } catch (e) {
-      return {
-        'success': false,
-        'message':
-            'Không thể kết nối đến máy chủ Backend! Vui lòng đảm bảo Server Python đang chạy.',
-      };
+    final activeRoot = await getWorkingRootUrl();
+    final candidateRoots = <String>[activeRoot];
+    for (var r in _candidateRootUrls) {
+      if (!candidateRoots.contains(r)) candidateRoots.add(r);
     }
+
+    String? lastErrorMsg;
+
+    for (final root in candidateRoots) {
+      try {
+        final uri = Uri.parse('$root/api/v1/auth/login');
+        debugPrint('[AuthService Login] Requesting login: $uri');
+        final response = await http
+            .post(
+              uri,
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode({'email': email, 'password': password}),
+            )
+            .timeout(const Duration(seconds: 5));
+
+        final responseData = jsonDecode(response.body);
+
+        if (response.statusCode == 200) {
+          final token = responseData['access_token'];
+          if (token != null) {
+            await saveToken(token);
+          }
+          // Chuyển làm việc chính thức sang server xác thực thành công tài khoản này!
+          _workingRootUrl = root;
+          debugPrint('[AuthService Login Success] Authenticated via $root');
+          return {'success': true, 'token': token};
+        } else {
+          lastErrorMsg =
+              responseData['detail'] ?? 'Email hoặc mật khẩu không chính xác!';
+          debugPrint('[AuthService Login Failed] $root -> $lastErrorMsg');
+        }
+      } catch (e) {
+        debugPrint('[AuthService Login Exception] $root -> $e');
+      }
+    }
+
+    return {
+      'success': false,
+      'message': lastErrorMsg ?? 'Email hoặc mật khẩu không chính xác!',
+    };
   }
 
   // 3. Hàm Lấy thông tin User hiện tại (/me)
@@ -264,20 +301,43 @@ class AuthService {
         return {'success': false, 'message': 'Chưa đăng nhập'};
       }
 
-      final response = await getApi(
-        '/api/v1/auth/me',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-        return {'success': true, 'data': responseData};
-      } else {
-        return {'success': false, 'message': 'Phiên đăng nhập đã hết hạn'};
+      final activeRoot = await getWorkingRootUrl();
+      final candidateRoots = <String>[activeRoot];
+      for (var r in _candidateRootUrls) {
+        if (!candidateRoots.contains(r)) candidateRoots.add(r);
       }
+
+      for (final root in candidateRoots) {
+        try {
+          final uri = Uri.parse('$root/api/v1/auth/me');
+          final response = await http
+              .get(
+                uri,
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': 'Bearer $token',
+                },
+              )
+              .timeout(const Duration(seconds: 5));
+
+          if (response.statusCode == 200) {
+            _workingRootUrl = root;
+            final responseData = jsonDecode(response.body);
+            final name = (responseData['full_name'] as String?)?.trim();
+            final username = (responseData['username'] as String?)?.trim();
+            final email = (responseData['email'] as String?)?.trim();
+            final realName = (name != null && name.isNotEmpty)
+                ? name
+                : ((username != null && username.isNotEmpty)
+                    ? username
+                    : (email ?? 'Tài Khoản User'));
+            await saveUserName(realName);
+            return {'success': true, 'data': responseData};
+          }
+        } catch (_) {}
+      }
+
+      return {'success': false, 'message': 'Phiên đăng nhập đã hết hạn'};
     } catch (e) {
       return {'success': false, 'message': 'Không thể kết nối đến máy chủ!'};
     }

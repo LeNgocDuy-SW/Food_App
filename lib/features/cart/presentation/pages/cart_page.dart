@@ -7,6 +7,7 @@ import '../../domain/entities/cart_item.dart';
 import '../../data/cart_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:food_app/core/router/app_router.dart';
+import 'package:food_app/core/widgets/app_image_widget.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -194,21 +195,13 @@ class _CartPageState extends State<CartPage> {
           // Food image
           ClipRRect(
             borderRadius: BorderRadius.circular(16),
-            child: Container(
+            child: SizedBox(
               width: 84,
               height: 84,
-              color: Colors.grey.shade100,
-              child: item.image.startsWith('http')
-                  ? Image.network(
-                      item.image,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => const Icon(
-                        Icons.broken_image,
-                        size: 30,
-                        color: Colors.grey,
-                      ),
-                    )
-                  : Image.asset(item.image, fit: BoxFit.cover),
+              child: AppImageWidget(
+                imagePath: item.image,
+                fit: BoxFit.cover,
+              ),
             ),
           ),
           const SizedBox(width: 16),
